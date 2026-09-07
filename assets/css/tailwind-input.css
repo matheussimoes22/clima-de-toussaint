@@ -1,0 +1,7 @@
+/*
+ * Entrada do compilador Tailwind.
+ * O arquivo tailwind.css gerado é versionado para o site continuar estático.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

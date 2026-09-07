@@ -1,0 +1,1622 @@
+/**
+ * Estilos autorais do Clima de Toussaint.
+ * As classes utilitárias do Tailwind continuam disponíveis para preservar a interface.
+ */
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: 0.5rem;
+  background: #fbbf24;
+  color: #0f172a;
+  padding: 0.65rem 0.9rem;
+  font-weight: 700;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 3px;
+}
+/* Impede o popup de dicionário/seleção em elementos interativos no mobile */
+button,
+.nav-button,
+.metric-card,
+[data-view],
+[data-lang],
+nav,
+.clickable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+/* Barra de navegação fixa no rodapé do celular */
+@media (max-width: 767px) {
+  html,
+  body {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  #app.flex {
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  main#main-content {
+    padding-bottom: 6.5rem !important;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem) !important;
+    overflow-y: auto;
+  }
+  nav.app-nav {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    width: 100%;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* === MENU DE AJUSTES MOBILE === */
+#mobile-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+#mobile-settings-btn:active {
+  transform: scale(0.92);
+}
+#mobile-settings-btn.open {
+  border-color: #fbbf24;
+  transform: rotate(45deg);
+}
+#mobile-settings-panel {
+  position: absolute;
+  top: 3.25rem;
+  right: 0;
+  min-width: 12.5rem;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 0.9rem;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#mobile-settings-panel.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.font-cinzel {
+  font-family: "Cinzel", serif;
+}
+.toussaint-gold {
+  color: #fbbf24;
+}
+
+/* === FUNDO CLIMÁTICO DINÂMICO === */
+#weather-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transition: background 1.5s ease;
+}
+#app {
+  position: relative;
+  z-index: 1;
+}
+#mobile-alert-container {
+  z-index: 40;
+}
+#modal {
+  z-index: 50;
+}
+
+/* Camada para partículas/efeitos */
+#weather-bg::before,
+#weather-bg::after {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+
+/* CHUVA (gotas em mosaico contínuo, sem "pulos" de loop) */
+body.fx-rain #weather-bg::before,
+body.fx-rain-heavy #weather-bg::before,
+body.fx-storm #weather-bg::before {
+  opacity: 0.4;
+  background-image:
+    radial-gradient(
+      1px 14px at 12% 10%,
+      rgba(190, 220, 255, 0.75),
+      transparent 100%
+    ),
+    radial-gradient(
+      1px 10px at 34% 46%,
+      rgba(190, 220, 255, 0.6),
+      transparent 100%
+    ),
+    radial-gradient(
+      1.2px 16px at 58% 22%,
+      rgba(205, 230, 255, 0.8),
+      transparent 100%
+    ),
+    radial-gradient(
+      1px 12px at 77% 66%,
+      rgba(190, 220, 255, 0.65),
+      transparent 100%
+    ),
+    radial-gradient(
+      1px 9px at 91% 32%,
+      rgba(190, 220, 255, 0.55),
+      transparent 100%
+    ),
+    radial-gradient(
+      1.2px 15px at 24% 82%,
+      rgba(205, 230, 255, 0.7),
+      transparent 100%
+    ),
+    radial-gradient(
+      1px 11px at 66% 92%,
+      rgba(190, 220, 255, 0.6),
+      transparent 100%
+    ),
+    radial-gradient(
+      1px 13px at 45% 68%,
+      rgba(190, 220, 255, 0.65),
+      transparent 100%
+    );
+  background-size: 180px 180px;
+  background-repeat: repeat;
+  animation: rain-fall 0.85s linear infinite;
+  will-change: transform;
+}
+body.fx-rain-heavy #weather-bg::before,
+body.fx-storm #weather-bg::before {
+  opacity: 0.62;
+  background-size: 180px 180px;
+  animation: rain-fall 0.5s linear infinite;
+}
+@keyframes rain-fall {
+  from {
+    transform: rotate(10deg) scale(1.6) translateY(0);
+  }
+  to {
+    transform: rotate(10deg) scale(1.6) translateY(180px);
+  }
+}
+
+/* TEMPESTADE: chuva forte + flash */
+body.fx-storm #weather-bg::after {
+  opacity: 0;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(220, 235, 255, 0.95),
+    transparent 60%
+  );
+  animation: lightning 9s infinite;
+}
+@keyframes lightning {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+  }
+  93% {
+    opacity: 0.85;
+  }
+  94% {
+    opacity: 0.15;
+  }
+  95% {
+    opacity: 0.7;
+  }
+  96% {
+    opacity: 0;
+  }
+}
+
+/* NEVE */
+body.fx-snow #weather-bg::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+    radial-gradient(2px 2px at 60% 70%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 50%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 80% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 10% 80%, #fff, transparent),
+    radial-gradient(2px 2px at 90% 40%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 35% 15%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 90%, #fff, transparent);
+  background-size: 200px 200px;
+  animation: snow-fall 14s linear infinite;
+}
+@keyframes snow-fall {
+  from {
+    transform: translate(0, -200px);
+  }
+  to {
+    transform: translate(200px, 200px);
+  }
+}
+
+/* NEBLINA */
+body.fx-fog #weather-bg::before {
+  opacity: 0.55;
+  background:
+    radial-gradient(
+      ellipse at 30% 60%,
+      rgba(200, 210, 225, 0.45),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 70% 40%,
+      rgba(180, 195, 215, 0.4),
+      transparent 60%
+    );
+  animation: fog-drift 28s ease-in-out infinite alternate;
+  filter: blur(8px);
+}
+@keyframes fog-drift {
+  from {
+    transform: translateX(-40px);
+  }
+  to {
+    transform: translateX(40px);
+  }
+}
+
+/* ENSOLARADO: halo dourado pulsante no canto */
+body.fx-sun #weather-bg::before {
+  opacity: 0.4;
+  background: radial-gradient(
+    circle at 85% 12%,
+    rgba(251, 191, 36, 0.55),
+    transparent 35%
+  );
+  animation: sun-pulse 6s ease-in-out infinite;
+}
+@keyframes sun-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* NOITE LIMPA: duas camadas de estrelas com tamanhos e brilhos distintos. */
+body.fx-stars #weather-bg::before {
+  opacity: 0.62;
+  background-image:
+    radial-gradient(circle at 12% 18%, #fff 0 0.8px, transparent 1.5px),
+    radial-gradient(circle at 42% 62%, #cbd5e1 0 0.7px, transparent 1.4px),
+    radial-gradient(circle at 73% 31%, #fff 0 1px, transparent 1.7px),
+    radial-gradient(circle at 88% 76%, #dbeafe 0 0.8px, transparent 1.5px),
+    radial-gradient(circle at 54% 9%, #fff 0 0.7px, transparent 1.4px),
+    radial-gradient(circle at 27% 87%, #cbd5e1 0 0.9px, transparent 1.6px),
+    radial-gradient(circle at 8% 68%, #fff 0 0.7px, transparent 1.4px),
+    radial-gradient(circle at 94% 14%, #e2e8f0 0 0.8px, transparent 1.5px);
+  background-size: 310px 270px;
+  animation: star-twinkle-distant 6.5s ease-in-out -2s infinite alternate;
+}
+body.fx-stars #weather-bg::after {
+  opacity: 0.48;
+  background-image:
+    radial-gradient(
+      circle at 18% 32%,
+      #fff 0 1.1px,
+      rgba(191, 219, 254, 0.5) 1.6px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 61% 18%,
+      #fff 0 1px,
+      rgba(253, 230, 138, 0.38) 1.5px,
+      transparent 3.8px
+    ),
+    radial-gradient(
+      circle at 82% 58%,
+      #fff 0 1.2px,
+      rgba(191, 219, 254, 0.46) 1.7px,
+      transparent 4.2px
+    ),
+    radial-gradient(
+      circle at 38% 81%,
+      #fff 0 1px,
+      rgba(226, 232, 240, 0.4) 1.5px,
+      transparent 3.6px
+    ),
+    radial-gradient(
+      circle at 6% 9%,
+      #fff 0 1.1px,
+      rgba(191, 219, 254, 0.4) 1.6px,
+      transparent 4px
+    );
+  background-size: 420px 340px;
+  animation: star-twinkle-bright 9s ease-in-out -5s infinite alternate;
+}
+@keyframes star-twinkle-distant {
+  from {
+    opacity: 0.48;
+  }
+  to {
+    opacity: 0.72;
+  }
+}
+@keyframes star-twinkle-bright {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.62;
+  }
+}
+
+/* LUA DE SANGUE: glow vermelho + viés cromático */
+body.fx-bloodmoon #weather-bg {
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(127, 29, 29, 0.45),
+    transparent 65%
+  );
+  animation: bloodmoon-pulse 4s ease-in-out infinite;
+}
+body.fx-bloodmoon main {
+  filter: hue-rotate(-8deg) saturate(1.15);
+}
+@keyframes bloodmoon-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* === MODAL === */
+#modal {
+  transition: opacity 0.3s ease-in-out;
+}
+#modal-content {
+  transition: transform 0.3s ease-in-out;
+  transform: translateY(20px);
+}
+#modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+#modal.open #modal-content {
+  transform: translateY(0);
+}
+
+/* === CALENDÁRIO === */
+.calendar-day {
+  position: relative;
+  overflow: hidden;
+}
+.calendar-toolbar {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 5.5rem;
+  align-items: center;
+  padding: 1rem;
+}
+.calendar-toolbar-title {
+  min-width: 0;
+  line-height: 1.2;
+}
+.calendar-toolbar-next {
+  justify-self: end;
+}
+.calendar-day-number {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.5rem;
+  z-index: 1;
+}
+.calendar-day-badges {
+  position: absolute;
+  top: 0.38rem;
+  right: 0.4rem;
+  z-index: 1;
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  line-height: 1;
+}
+.calendar-holiday {
+  position: absolute;
+  right: auto;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+  display: grid;
+  width: 0.9rem;
+  height: 0.9rem;
+  place-items: center;
+  color: #fbbf24;
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.45));
+}
+.calendar-holiday svg {
+  width: 100%;
+  height: 100%;
+}
+.calendar-moon {
+  grid-area: 1 / 1;
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  font-size: 0.72rem;
+}
+
+/* No desktop, Lua e feriado ficam lado a lado sem cortar ou deslocar o card. */
+@media (min-width: 641px) {
+  .calendar-day-badges {
+    display: flex;
+    width: auto;
+    height: 1rem;
+    align-items: center;
+    gap: 0.18rem;
+  }
+  .calendar-moon {
+    order: 1;
+    flex: none;
+  }
+}
+.calendar-day-content {
+  height: 100%;
+  padding-top: 1.25rem;
+}
+.calendar-elven-date {
+  display: grid;
+  width: calc(100% + 0.75rem);
+  max-width: none;
+  margin: 1px -0.375rem;
+  justify-items: center;
+  color: rgba(251, 191, 36, 0.8);
+  font-family: "Cinzel", serif;
+  font-size: 0.5rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.calendar-savaed {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.calendar-savaed--long {
+  font-size: clamp(0.34rem, 1.55vw, 0.48rem);
+  letter-spacing: -0.035em;
+}
+.season-icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  vertical-align: -0.2em;
+}
+.record-date {
+  display: block;
+  margin-top: 0.3rem;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+@media (min-width: 768px) {
+  .calendar-elven-date {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    font-size: 0.625rem;
+  }
+  .calendar-savaed--long {
+    font-size: 0.57rem;
+    letter-spacing: -0.02em;
+  }
+}
+.calendar-day.today {
+  background-color: #4b5563;
+  border: 1px solid #fbbf24;
+}
+.calendar-day.past {
+  opacity: 0.5;
+  background-color: #1f2937;
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+#hourly-forecast-container {
+  scroll-behavior: smooth;
+}
+
+/* === TOGGLE === */
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: #fbbf24;
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #fbbf24;
+}
+.toggle-checkbox {
+  right: 0;
+  transition: all 0.3s;
+}
+.toggle-label {
+  width: 3rem;
+  height: 1.5rem;
+}
+select option {
+  background-color: #1f2937;
+  color: white;
+}
+
+/* === LUA DE SANGUE === */
+.blood-moon-text {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+}
+
+/* === CARDS === */
+.detail-card-interactive {
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.detail-card-interactive:hover {
+  transform: translateY(-3px);
+  border-color: #fbbf24;
+  box-shadow:
+    0 8px 20px -8px rgba(251, 191, 36, 0.35),
+    inset 0 0 0 1px rgba(251, 191, 36, 0.15);
+}
+.detail-card-static {
+  cursor: default;
+}
+
+/* === HEADER === */
+.toussaint-header-container {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(251, 191, 36, 0.2);
+  position: relative;
+}
+.toussaint-header-container::after {
+  content: "◈";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #0f172a;
+  padding: 0 10px;
+  color: #fbbf24;
+}
+.toussaint-title {
+  font-family: "Cinzel", serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.25;
+  padding-top: 0.15em;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.toussaint-subtitle {
+  font-family: "Cinzel", serif;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+@media (max-width: 768px) {
+  .toussaint-title {
+    font-size: clamp(1.5rem, 8vw, 2rem);
+  }
+  .toussaint-header-container {
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+  }
+}
+
+/* === UV === */
+.uv-low {
+  color: #4ade80;
+}
+.uv-moderate {
+  color: #facc15;
+}
+.uv-high {
+  color: #fb923c;
+}
+.uv-very-high {
+  color: #ef4444;
+}
+.uv-extreme {
+  color: #d946ef;
+}
+
+/* === TRANSIÇÃO DE VIEW === */
+.view-enter {
+  animation: viewEnter 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@keyframes viewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === ALERTAS slide-in === */
+.alert-item {
+  animation:
+    alertSlide 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both,
+    alertPulse 1.8s ease-in-out 0.4s 2;
+}
+@keyframes alertSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes alertPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* === LUA SVG (renderMoon) === */
+.moon-svg {
+  display: inline-block;
+  filter: drop-shadow(0 0 18px rgba(226, 232, 240, 0.35));
+}
+.moon-svg.blood {
+  filter: drop-shadow(0 0 22px rgba(239, 68, 68, 0.65));
+  animation: bloodOrb 3s ease-in-out infinite;
+}
+@keyframes bloodOrb {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.85));
+  }
+}
+
+/* Toggle élfico: fade-in dos nomes */
+.elven-fade {
+  animation: elvenIn 0.5s ease both;
+}
+@keyframes elvenIn {
+  from {
+    opacity: 0;
+    letter-spacing: 0.4em;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.15em;
+  }
+}
+
+/* === TYPEWRITER (toggle élfico) === */
+.typewriter {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid #fbbf24;
+  animation:
+    typing 0.7s steps(20, end),
+    caret 0.8s step-end 3;
+}
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+@keyframes caret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+/* === HORA ATUAL: dot pulsante === */
+.now-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fbbf24;
+  margin-right: 4px;
+  vertical-align: middle;
+  box-shadow: 0 0 8px #fbbf24;
+  animation: nowPulse 1.4s ease-in-out infinite;
+}
+@keyframes nowPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.4;
+  }
+}
+
+/* === SKELETON === */
+.skeleton {
+  background: linear-gradient(90deg, #1f2937 0%, #334155 50%, #1f2937 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* === ÍCONES METEOROLÓGICOS SVG === */
+.wx-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+.wx-icon-sm {
+  width: 24px;
+  height: 24px;
+}
+.wx-icon-md {
+  width: 40px;
+  height: 40px;
+}
+.wx-icon-lg {
+  width: 96px;
+  height: 96px;
+}
+@media (max-width: 640px) {
+  .wx-icon-lg {
+    width: 76px;
+    height: 76px;
+  }
+}
+.wx-icon .wx-sun {
+  fill: #fbbf24;
+}
+.wx-icon .wx-moon {
+  fill: #e5e7eb;
+}
+.wx-icon .wx-cloud {
+  fill: #cbd5e1;
+}
+.wx-icon .wx-cloud-dark {
+  fill: #94a3b8;
+}
+.wx-icon .wx-rain {
+  stroke: #60a5fa;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.wx-icon .wx-snow {
+  stroke: #e0f2fe;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.wx-icon .wx-bolt {
+  fill: #fde047;
+}
+.wx-icon .wx-fog {
+  stroke: #cbd5e1;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.wx-icon .wx-blood {
+  fill: #b91c1c;
+}
+.wx-icon.spin-slow .wx-sun {
+  animation: sunSpin 30s linear infinite;
+  transform-origin: 32px 32px;
+}
+@keyframes sunSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.wx-icon .wx-rain.r1 {
+  animation: rainDrop 1.1s linear infinite;
+}
+.wx-icon .wx-rain.r2 {
+  animation: rainDrop 1.1s linear infinite 0.4s;
+}
+.wx-icon .wx-rain.r3 {
+  animation: rainDrop 1.1s linear infinite 0.8s;
+}
+@keyframes rainDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.wx-icon .wx-snow.s1 {
+  animation: snowDrop 2.2s linear infinite;
+}
+.wx-icon .wx-snow.s2 {
+  animation: snowDrop 2.2s linear infinite 0.7s;
+}
+.wx-icon .wx-snow.s3 {
+  animation: snowDrop 2.2s linear infinite 1.4s;
+}
+@keyframes snowDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.wx-icon .wx-bolt {
+  animation: boltFlash 2.5s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes boltFlash {
+  0%,
+  40%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.3;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+.wx-icon .wx-fog {
+  animation: fogDrift 4s ease-in-out infinite alternate;
+}
+@keyframes fogDrift {
+  from {
+    transform: translateX(-1px);
+  }
+  to {
+    transform: translateX(2px);
+  }
+}
+
+/* === MOBILE FIXES === */
+@media (max-width: 640px) {
+  .toussaint-title {
+    font-size: clamp(1.45rem, 8.5vw, 1.85rem);
+    letter-spacing: 0.1em;
+  }
+  .toussaint-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+  }
+  #real-time-clock {
+    font-size: 1.75rem;
+  }
+  .modal-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  #hourly-forecast-container > div {
+    width: 4.5rem;
+    padding: 0.5rem;
+  }
+  .calendar-day {
+    padding: 0.25rem;
+  }
+  .calendar-toolbar {
+    grid-template-columns: 4.5rem minmax(0, 1fr) 4.5rem;
+    padding: 0.65rem 0.4rem;
+  }
+  .calendar-toolbar-actions {
+    gap: 0.1rem;
+  }
+  .calendar-toolbar-actions button,
+  .calendar-toolbar-next {
+    padding: 0.35rem;
+  }
+  .calendar-toolbar-title {
+    font-size: clamp(0.85rem, 4.2vw, 1.1rem);
+  }
+  .calendar-day-number {
+    top: 0.35rem;
+    left: 0.25rem;
+    font-size: 0.65rem;
+  }
+  .calendar-day-badges {
+    top: 0.3rem;
+    right: 0.15rem;
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .calendar-moon {
+    width: 0.75rem;
+    height: 0.75rem;
+    min-width: 0.75rem;
+    font-size: 0.58rem;
+  }
+  .calendar-holiday {
+    top: auto;
+    right: auto;
+    bottom: 0.25rem;
+    left: 0.25rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.75));
+  }
+}
+
+@media (max-width: 374px) {
+  .calendar-elven-date {
+    width: calc(100% + 0.5rem);
+    margin-inline: -0.25rem;
+  }
+  .calendar-savaed--long {
+    font-size: clamp(0.28rem, 1.4vw, 0.42rem);
+    letter-spacing: -0.04em;
+  }
+}
+
+@media (max-width: 340px) {
+  .calendar-day-number {
+    left: 0.15rem;
+    font-size: 0.58rem;
+  }
+  .calendar-day-badges {
+    right: 0.08rem;
+    width: 0.68rem;
+    height: 0.68rem;
+  }
+  .calendar-moon {
+    width: 0.68rem;
+    height: 0.68rem;
+    min-width: 0.68rem;
+    font-size: 0.52rem;
+  }
+}
+
+/* === REPAGINAÇÃO MOBILE (cards) === */
+@media (max-width: 767px) {
+  #main-content .bg-slate-800,
+  #main-content .bg-slate-800\/50,
+  #main-content .bg-slate-900 {
+    border-radius: 1.15rem;
+    background-color: rgba(30, 41, 59, 0.72);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.9);
+  }
+  #hourly-forecast-container {
+    padding: 0.6rem;
+    margin: 0 -0.25rem;
+    border-radius: 1.15rem;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    scrollbar-width: none;
+  }
+  #hourly-forecast-container::-webkit-scrollbar {
+    display: none;
+  }
+  #hourly-forecast-container > div {
+    border-radius: 0.95rem;
+  }
+  #main-content h3.font-cinzel,
+  #main-content h2.font-cinzel {
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+  }
+  #main-content .grid {
+    gap: 0.65rem;
+  }
+  #main-content .grid-cols-7 > div,
+  #main-content .calendar-day,
+  #main-content .calendar-day.bg-slate-800 {
+    border-radius: 0.55rem;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
+/* === NEXT EVENTS PANEL === */
+.ui-icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  vertical-align: -0.18em;
+}
+.calendar-weather-icon {
+  width: 1.25em;
+  height: 1.25em;
+}
+.event-pill.event-type-heat {
+  --event-color: #fb923c;
+  --event-bg: #442622;
+}
+.event-pill.event-type-cold,
+.event-pill.event-type-snow {
+  --event-color: #7dd3fc;
+  --event-bg: #173349;
+}
+.event-pill.event-type-front {
+  --event-color: #67e8f9;
+  --event-bg: #16343f;
+}
+.event-pill.event-type-rain {
+  --event-color: #60a5fa;
+  --event-bg: #1c304d;
+}
+.event-pill.event-type-storm {
+  --event-color: #c4b5fd;
+  --event-bg: #322448;
+}
+.event-pill.event-type-wind {
+  --event-color: #a5c4d4;
+  --event-bg: #293540;
+}
+.event-pill.event-type-fog {
+  --event-color: #cbd5e1;
+  --event-bg: #343b47;
+}
+.event-pill.event-type-blood {
+  --event-color: #fb7185;
+  --event-bg: #432431;
+}
+button.event-pill[class*="event-type-"] {
+  color: var(--event-color);
+  background: var(--event-bg);
+  border-color: transparent;
+  border-radius: 999px;
+  gap: 0.4rem;
+}
+button.event-pill[class*="event-type-"]:hover {
+  filter: brightness(1.2);
+}
+/* Ajustes de proporção restritos ao desktop; o grid mobile mantém suas medidas. */
+@media (min-width: 1024px) {
+  #calendar-grid > * {
+    height: 9rem;
+  }
+  #calendar-grid .calendar-day {
+    padding: 0.65rem;
+  }
+  #calendar-grid .calendar-day-content {
+    justify-content: center;
+    gap: 0.15rem;
+    padding-block: 1.15rem 0.6rem;
+    margin-top: 0;
+  }
+  #calendar-grid .calendar-weather-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+  #calendar-grid .calendar-elven-date {
+    line-height: 1.25;
+  }
+  .calendar-toolbar {
+    padding-block: 1rem;
+  }
+}
+@media (max-width: 767px) {
+  #calendar-grid {
+    touch-action: pan-y pinch-zoom;
+  }
+}
+.event-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  font-size: 0.8rem;
+  color: #fde68a;
+  white-space: nowrap;
+}
+.event-pill .event-emoji {
+  font-size: 1rem;
+}
+.event-pill.danger {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+}
+button.event-pill {
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+button.event-pill:hover {
+  transform: translateY(-2px);
+  background: rgba(51, 65, 85, 0.85);
+  border-color: rgba(251, 191, 36, 0.6);
+}
+button.event-pill.danger:hover {
+  border-color: rgba(248, 113, 113, 0.75);
+}
+button.event-pill:active {
+  transform: translateY(0);
+}
+.event-pill .event-chevron {
+  opacity: 0.55;
+  font-size: 0.7rem;
+  margin-left: 2px;
+}
+.events-hint {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 0.4rem;
+}
+.event-pill .alert-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.event-pill.alert-green {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.55);
+  color: #bbf7d0;
+}
+.event-pill.alert-green .alert-dot {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.75);
+}
+.event-pill.alert-yellow {
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.55);
+  color: #fef08a;
+}
+.event-pill.alert-yellow .alert-dot {
+  background: #facc15;
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.75);
+}
+.event-pill.alert-orange {
+  background: rgba(251, 146, 60, 0.15);
+  border-color: rgba(251, 146, 60, 0.6);
+  color: #fed7aa;
+}
+.event-pill.alert-orange .alert-dot {
+  background: #fb923c;
+  box-shadow: 0 0 6px rgba(251, 146, 60, 0.8);
+}
+.event-pill.alert-red {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fecaca;
+}
+.event-pill.alert-red .alert-dot {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.85);
+}
+.event-pill.alert-blue {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #bae6fd;
+}
+.event-pill.alert-blue .alert-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+}
+.event-pill.alert-blood {
+  background: rgba(190, 18, 60, 0.18);
+  border-color: rgba(190, 18, 60, 0.7);
+  color: #fda4af;
+}
+.event-pill.alert-blood .alert-dot {
+  background: #be123c;
+  box-shadow: 0 0 7px rgba(190, 18, 60, 0.9);
+}
+button.event-pill.alert-blue:hover {
+  border-color: rgba(56, 189, 248, 0.9);
+  background: rgba(56, 189, 248, 0.22);
+}
+button.event-pill.alert-blood:hover {
+  border-color: rgba(190, 18, 60, 0.95);
+  background: rgba(190, 18, 60, 0.28);
+}
+button.event-pill.alert-green:hover {
+  border-color: rgba(34, 197, 94, 0.9);
+  background: rgba(34, 197, 94, 0.22);
+}
+button.event-pill.alert-yellow:hover {
+  border-color: rgba(250, 204, 21, 0.9);
+  background: rgba(250, 204, 21, 0.22);
+}
+button.event-pill.alert-orange:hover {
+  border-color: rgba(251, 146, 60, 0.9);
+  background: rgba(251, 146, 60, 0.22);
+}
+button.event-pill.alert-red:hover {
+  border-color: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.22);
+}
+
+/* === CARD DE BOLETIM (NOTÍCIA) === */
+.news-card {
+  color: #e2e8f0;
+}
+.news-head {
+  border-bottom: 1px solid rgba(251, 191, 36, 0.25);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+.news-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.news-sev-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+.news-sev-orange {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.5);
+}
+.news-sev-yellow {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.5);
+}
+.news-sev-blue {
+  background: rgba(56, 189, 248, 0.15);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+}
+.news-sev-blood {
+  background: rgba(127, 29, 29, 0.35);
+  color: #fca5a5;
+  border: 1px solid rgba(185, 28, 28, 0.7);
+}
+.news-kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.news-title {
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: #fbbf24;
+  margin-top: 0.35rem;
+}
+.news-lead {
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: #f1f5f9;
+  font-style: italic;
+}
+.news-section-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  margin: 1.1rem 0 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.news-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(251, 191, 36, 0.2);
+}
+.news-card p {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  margin-bottom: 0.6rem;
+}
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (min-width: 640px) {
+  .news-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.news-metric {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.6rem;
+}
+.news-metric span {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.news-metric strong {
+  font-size: 1rem;
+  color: #f8fafc;
+  font-weight: 600;
+}
+.news-advice {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.news-advice li {
+  position: relative;
+  padding-left: 1.1rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+.news-advice li::before {
+  content: "\2756";
+  position: absolute;
+  left: 0;
+  color: #fbbf24;
+  font-size: 0.7rem;
+  top: 0.25rem;
+}
+.news-region {
+  background: rgba(30, 41, 59, 0.65);
+  border-left: 3px solid rgba(251, 191, 36, 0.6);
+  border-radius: 0.45rem;
+  padding: 0.7rem 0.85rem;
+}
+.news-footer {
+  margin-top: 1.2rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* === LANG BUTTONS === */
+.lang-btn {
+  color: #94a3b8;
+}
+.lang-btn.active {
+  background: #fbbf24;
+  color: #0f172a;
+}
+.lang-btn:hover:not(.active) {
+  background: #334155;
+  color: #fde68a;
+}
+
+/* === DIÁRIO === */
+.diary-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-family: "Inter", sans-serif;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+.diary-textarea:focus {
+  outline: none;
+  border-color: #fbbf24;
+}
+.diary-saved {
+  color: #4ade80;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.diary-saved.show {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  #weather-bg::before,
+  #weather-bg::after {
+    animation: none !important;
+  }
+  body.fx-stars #weather-bg::before {
+    opacity: 0.62;
+  }
+  body.fx-stars #weather-bg::after {
+    opacity: 0.48;
+  }
+}
+
+/* Cores semanticas consistentes nos vetores locais. */
+.ui-icon-sun,
+.ui-icon-heat {
+  color: #fbbf24;
+}
+.ui-icon-cold,
+.ui-icon-snow,
+.ui-icon-drop {
+  color: #7dd3fc;
+}
+.ui-icon-rain,
+.ui-icon-front {
+  color: #60a5fa;
+}
+.ui-icon-storm {
+  color: #c4b5fd;
+}
+.ui-icon-leaf {
+  color: #6ee7b7;
+}
+.ui-icon-wind,
+.ui-icon-eye {
+  color: #a5c8dc;
+}
+.ui-icon-pressure {
+  color: #c4b5fd;
+}
+.ui-icon-pin,
+.ui-icon-blood {
+  color: #fda4af;
+}
+.ui-icon-fog {
+  color: #cbd5e1;
+}
+.event-pill .ui-icon,
+#modal-title .ui-icon {
+  color: inherit;
+}
+.nav-button[data-view="today"] svg {
+  color: #fbbf24;
+}
+.nav-button[data-view="calendar"] svg {
+  color: #93c5fd;
+}
+.nav-button[data-view="monthly"] svg {
+  color: #6ee7b7;
+}
+.nav-button[data-view="moon"] svg {
+  color: #c4b5fd;
+}
+.nav-button svg {
+  stroke-width: 1.7;
+}
+@media (max-width: 767px) {
+  #main-content:has(#calendar-grid) {
+    overflow-x: hidden;
+  }
+}
+@media (min-width: 1024px) {
+  #main-content > .max-w-4xl {
+    max-width: 72rem;
+  }
+  #main-content > div:has(> .calendar-toolbar) {
+    max-width: 88rem;
+    margin-inline: auto;
+  }
+  .calendar-toolbar {
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .calendar-toolbar-next {
+    justify-self: end;
+  }
+  #calendar-grid .calendar-day {
+    min-width: 0;
+  }
+}

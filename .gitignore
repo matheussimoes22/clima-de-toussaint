@@ -1,0 +1,18 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+dist/
+
+# Materiais temporários usados apenas na migração do monólito.
+Clima_Toussaint-original.zip
+imported-source/
+
+# Pacotes de publicação gerados localmente.
+deploy-clima-toussaint-*.zip
+dist-toussaint-*.zip
+
+# Configurações locais e credenciais.
+.env
+.env.*
+!.env.example

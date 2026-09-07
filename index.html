@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      html,
+      body {
+        background: #0f172a;
+      }
+      html.booting #app,
+      html.booting #weather-bg {
+        visibility: hidden;
+      }
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 18px;
+        background: radial-gradient(ellipse at center, #243044, #0f172a 65%);
+        color: #e6c879;
+        font-family: Georgia, serif;
+        text-align: center;
+        transition: opacity 0.22s ease;
+      }
+      #app-splash img {
+        width: 104px;
+        height: 104px;
+        filter: drop-shadow(0 0 18px #e6c83935);
+        animation: splash-breathe 1.8s ease-in-out infinite;
+      }
+      #app-splash strong {
+        font-size: clamp(22px, 5vw, 30px);
+        font-weight: 400;
+        letter-spacing: 0.08em;
+      }
+      #app-splash small {
+        color: #b9c5d5;
+        font: 14px system-ui;
+      }
+      #app-splash.leaving {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @keyframes splash-breathe {
+        50% {
+          transform: scale(1.045);
+          filter: drop-shadow(0 0 26px #e6c83965);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #app-splash img {
+          animation: none;
+        }
+        #app-splash {
+          transition: none;
+        }
+      }
+    </style>
+    <title>Clima de Toussaint</title>
+    <meta
+      name="description"
+      content="Entrada de compatibilidade para o Clima de Toussaint."
+    />
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=clima-de-toussaint.html" />
+    </noscript>
+  </head>
+  <body>
+    <div id="app-splash" role="status" aria-live="polite">
+      <img src="assets/icons/app-icon.svg" alt="" /><strong
+        >Clima de Toussaint</strong
+      ><small id="splash-message">Preparando o observatório ducal…</small
+      ><a id="splash-retry" href="" hidden>Recarregar</a>
+    </div>
+    <script>
+      // Netlify e GitHub Pages procuram index.html; a tela real usa um nome de domínio claro.
+      window.location.replace(
+        `clima-de-toussaint.html${window.location.search}${window.location.hash}`,
+      );
+    </script>
+  </body>
+</html>

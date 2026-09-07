@@ -1,0 +1,22 @@
+{
+  "name": "Clima de Toussaint",
+  "short_name": "Toussaint",
+  "id": "./",
+  "lang": "pt-BR",
+  "description": "Previsão climática realista do ducado de Toussaint",
+  "start_url": "./clima-de-toussaint.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "categories": ["weather", "entertainment"],
+  "icons": [
+    {
+      "src": "assets/icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    { "src": "favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}
