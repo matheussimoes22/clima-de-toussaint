@@ -7,6 +7,8 @@ import {
 } from "../assets/js/engine/weather-events.js";
 import { EventBulletinView } from "../assets/js/views/event-bulletins.js";
 const report = [];
+let summerNightHours = 0;
+let hotSummerNightHours = 0;
 for (const year of [2025, 2026, 2027, 2032]) {
   let worst = 0,
     total = 0,
@@ -31,6 +33,24 @@ for (const year of [2025, 2026, 2027, 2032]) {
           rows.reduce((a, h) => a + h.precipAmountMm, 0) - day.precipAmountMm,
         ) < 0.011,
       );
+      if (day.seasonKey === "summer") {
+        const nightRows = rows.filter((hour) => hour.isNight);
+        const exceptionalRows = nightRows.filter((hour) => hour.temp >= 30);
+        summerNightHours += nightRows.length;
+        hotSummerNightHours += exceptionalRows.length;
+        for (const hour of exceptionalRows) {
+          assert.ok(
+            day.heatWaveBonus >= 4,
+            `${loc} ${date.toISOString()} ${hour.hour}: ${hour.temp} °C, bônus ${day.heatWaveBonus}`,
+          );
+          assert.ok(
+            eventHours("heat", date, loc).hours.some(
+              (eventHour) => eventHour.hour === hour.hour,
+            ),
+            `${loc} ${date.toISOString()} ${hour.hour}: ${hour.temp} °C, máxima ${day.tempMax} °C, bônus ${day.heatWaveBonus}`,
+          );
+        }
+      }
       if (i % 17 === 0) {
         const state = { currentLocation: loc, currentDate: date };
         const html = EventBulletinView.renderNextEventsPanel.call({
@@ -63,6 +83,11 @@ for (const year of [2025, 2026, 2027, 2032]) {
     wetDaysAverage: Math.round(total / 9),
   });
 }
+assert.ok(hotSummerNightHours > 0);
+assert.ok(
+  hotSummerNightHours / summerNightHours < 0.005,
+  `${hotSummerNightHours}/${summerNightHours} horas noturnas de verão chegaram a 30 °C`,
+);
 const day = W.getWeatherForDay(new Date(2026, 7, 26), "beauclair");
 assert.equal(
   matchesEvent(

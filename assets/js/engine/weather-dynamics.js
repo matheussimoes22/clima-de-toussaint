@@ -5,6 +5,57 @@ const smooth = (x) => {
   return x * x * (3 - 2 * x);
 };
 
+/**
+ * Desenha a curva térmica entre a mínima próxima ao amanhecer e o pico da
+ * tarde. A retenção noturna varia com nuvens, umidade, vento, relevo e apenas
+ * aumenta de forma relevante durante ondas de calor intensas.
+ */
+function thermalCycle(day, loc, hour) {
+  const minute = hour * 60;
+  const sunrise = day.sunriseMinutes;
+  const sunset = day.sunsetMinutes;
+  const solarNoon = (sunrise + sunset) / 2;
+  const peak = clamp(
+    solarNoon + 150 + (loc.delayHours || 0) * 10,
+    14 * 60,
+    16.5 * 60,
+  );
+  const cloudRetention =
+    day.conditionKey.includes("overcast") || day.precipitationOccurs
+      ? 0.05
+      : day.conditionKey.includes("cloudy")
+        ? 0.025
+        : 0;
+  const humidityRetention = clamp((day.humidity - 55) / 500, -0.03, 0.07);
+  const windCooling = clamp((day.windSpeed - 12) / 250, 0, 0.08);
+  const altitudeCooling = clamp(-(loc.tempOffset || 0) / 75, 0, 0.08);
+  const intenseHeatRetention = clamp((day.heatWaveBonus - 4) * 0.025, 0, 0.075);
+  const sunsetRetention = clamp(
+    0.48 +
+      cloudRetention +
+      humidityRetention -
+      windCooling -
+      altitudeCooling +
+      intenseHeatRetention,
+    0.34,
+    day.heatWaveBonus >= 5 ? 0.58 : 0.54,
+  );
+
+  if (minute < sunrise) {
+    const elapsedNight = minute + 1440 - sunset;
+    const nightLength = sunrise + 1440 - sunset;
+    return sunsetRetention * (1 - smooth(elapsedNight / nightLength));
+  }
+  if (minute <= peak) return smooth((minute - sunrise) / (peak - sunrise));
+  if (minute < sunset) {
+    const cooling = smooth((minute - peak) / (sunset - peak));
+    return 1 - (1 - sunsetRetention) * cooling;
+  }
+  const elapsedNight = minute - sunset;
+  const nightLength = sunrise + 1440 - sunset;
+  return sunsetRetention * (1 - smooth(elapsedNight / nightLength));
+}
+
 /** Produz formação de nuvens, precipitação e dissipação com defasagem regional. */
 export function buildHourlyWeather(day, loc, noise, feelsLike, previous = day) {
   const wet = day.precipitationOccurs;
@@ -24,9 +75,8 @@ export function buildHourlyWeather(day, loc, noise, feelsLike, previous = day) {
     const envelope = wet ? smooth((width + 3 - distance) / 3) : 0;
     const rainWeight = wet ? Math.max(0, 1 - distance / width) : 0;
     const daylight = h * 60 >= day.sunriseMinutes && h * 60 < day.sunsetMinutes;
-    // Aquecimento diurno e resfriamento progressivo pela passagem do episódio.
-    const phase = ((h - 5 - (loc.delayHours || 0)) / 24) * 2 * Math.PI;
-    let thermal = (1 - Math.cos(phase)) / 2;
+    // Aquecimento até o meio da tarde e perda gradual de calor após o pico.
+    let thermal = thermalCycle(day, loc, h);
     const frontPassage = coldFront ? smooth((h - center + 3) / 6) : 0;
     thermal = clamp(
       thermal -

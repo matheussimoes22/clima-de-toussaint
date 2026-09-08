@@ -25,6 +25,7 @@ const keys = [
 ];
 const seen = new Set();
 const report = {};
+let exceptionalHotNights = 0;
 for (const loc of Object.keys(LOCATIONS)) {
   let dry = 0,
     maxDry = 0,
@@ -54,6 +55,19 @@ for (const loc of Object.keys(LOCATIONS)) {
       );
       assert.ok(Number.isFinite(hour.temp) && Number.isFinite(hour.humidity));
       assert.ok(hour.humidity >= 10 && hour.humidity <= 100);
+      if (day.seasonKey === "summer" && hour.isNight && hour.temp >= 30) {
+        exceptionalHotNights++;
+        assert.ok(
+          day.heatWaveBonus >= 4,
+          `${loc} ${date.toISOString()}: noite quente sem onda intensa`,
+        );
+        assert.ok(
+          eventHours("heat", date, loc).hours.some(
+            (eventHour) => eventHour.hour === hour.hour,
+          ),
+          `${loc} ${date.toISOString()}: noite excepcional sem alerta`,
+        );
+      }
       if (h > 0) {
         assert.ok(
           !(
@@ -111,6 +125,7 @@ for (const loc of Object.keys(LOCATIONS)) {
     assert.ok(evening > morning, `${loc}: manhã ${morning}, tarde ${evening}`);
   report[loc] = { wetDays, maxDry, morning, evening };
 }
+assert.ok(exceptionalHotNights > 0, "A simulação perdeu noites extremas raras");
 assert.ok(
   seen.has("heat") &&
     seen.has("storm") &&

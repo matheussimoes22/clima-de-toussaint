@@ -8,12 +8,13 @@ export function matchesEvent(key, day, hour, previous, locKey) {
   const season = SEASONS[day.seasonKey];
   switch (key) {
     case "heat":
-      return (
-        day.tempMax >= season.tempMax + loc.tempOffset + 2 &&
-        hour.temp >= Math.max(30, season.tempMax + loc.tempOffset - 1) &&
-        hour.temp >=
-          (hour.isNight ? season.tempMin + loc.tempOffset + 8 : day.tempMin + 6)
-      );
+      return hour.isNight
+        ? day.heatWaveBonus >= 4 &&
+            day.tempMax >= season.tempMax + loc.tempOffset + 2 &&
+            hour.temp >= 30
+        : day.tempMax >= season.tempMax + loc.tempOffset + 2 &&
+            hour.temp >= Math.max(30, season.tempMax + loc.tempOffset - 1) &&
+            hour.temp >= day.tempMin + 6;
     case "cold":
       return hour.temp <= Math.min(2, season.tempMin + loc.tempOffset - 3);
     case "front":
@@ -68,7 +69,11 @@ export function eventHours(key, date, locKey) {
     const threshold =
       SEASONS[day.seasonKey].tempMax + LOCATIONS[locKey].tempOffset;
     const next = WeatherEngine.getWeatherForDay(nextDate, locKey);
-    if (previous.tempMax < threshold && next.tempMax < threshold)
+    if (
+      day.heatWaveBonus < 4 &&
+      previous.tempMax < threshold &&
+      next.tempMax < threshold
+    )
       return { day, hours: [] };
   }
   if (
