@@ -1,4 +1,4 @@
-import { uiIcon } from "./interface-icons.js";
+import { bloodMoonIcon, uiIcon } from "./interface-icons.js";
 /** Renderização da tela Hoje e de suas interações meteorológicas. */
 
 import { ELVEN_DATA, LOCATIONS } from "../data/world-data.js";
@@ -18,6 +18,7 @@ import {
   tWindDir,
 } from "../i18n/translations.js";
 import {
+  isBloodMoonVisible,
   resolveWeatherIcon,
   resolveWxSvg,
   WeatherEngine,
@@ -52,7 +53,9 @@ export const TodayView = {
     // Definir ícone principal com base na atividade
     let mainMoonIcon = weather.moon.icon;
     if (weather.moon.isBloodMoon) {
-      mainMoonIcon = isBloodMoonActive ? "🔴" : "🌕";
+      mainMoonIcon = isBloodMoonActive
+        ? bloodMoonIcon("blood-moon-icon--inline")
+        : "🌕";
     }
     const displayMoonPhase = this.state.isElven
       ? ELVEN_DATA.moonPhases[weather.moon.name]
@@ -78,16 +81,24 @@ export const TodayView = {
     hourly.forEach((h) => {
       const hourOfForecast = parseInt(h.hour.split(":")[0]);
       const isCurrentHour = hourOfForecast === currentHour;
-      const displayIcon =
-        h.conditionKey === "clear_night"
+      const showBloodMoon = isBloodMoonVisible(
+        h.conditionKey,
+        hourOfForecast,
+        weather.moon.isBloodMoon,
+      );
+      const displayIcon = showBloodMoon
+        ? resolveWxSvg(h.conditionKey, {
+            sizeClass: "wx-icon-sm",
+            isBloodMoon: true,
+          })
+        : h.conditionKey === "clear_night"
           ? h.moonIcon
-          : resolveWxSvg(h.conditionKey, {
-              sizeClass: "wx-icon-sm",
-              isBloodMoon: weather.moon.isBloodMoon,
-            });
-      const cardClasses = isCurrentHour
-        ? "flex-shrink-0 w-20 text-center bg-amber-500/20 p-3 rounded-lg border-2 border-amber-400"
-        : "flex-shrink-0 w-20 text-center bg-slate-800 p-3 rounded-lg border border-slate-700";
+          : resolveWxSvg(h.conditionKey, { sizeClass: "wx-icon-sm" });
+      const cardClasses = `${
+        isCurrentHour
+          ? "flex-shrink-0 w-20 text-center bg-amber-500/20 p-3 rounded-lg border-2 border-amber-400"
+          : "flex-shrink-0 w-20 text-center bg-slate-800 p-3 rounded-lg border border-slate-700"
+      }${showBloodMoon ? " blood-moon-forecast-hour" : ""}`;
       const textClasses = isCurrentHour ? "text-amber-300" : "text-gray-400";
       const cardId = isCurrentHour ? 'id="current-hour-forecast"' : "";
       hourlyHtml += `<div ${cardId} class="${cardClasses}" aria-label="${h.hour}: ${tCondName(h.conditionKey)}, ${h.temp}°, ${Math.round(h.humidity)}% ${t("Umidade")}"><p class="text-sm ${textClasses}">${h.hour}</p><p class="text-2xl my-1" aria-hidden="true">${displayIcon}</p><p class="text-lg font-bold">${h.temp}°</p><p class="text-xs ${textClasses}">${t("Umid.")} ${Math.round(h.humidity)}%</p></div>`;
@@ -100,7 +111,7 @@ export const TodayView = {
       bloodMoonCard = `
                     <div class="bg-red-900/30 border border-red-500/30 p-4 rounded-lg mb-6 shadow-[0_0_15px_rgba(220,38,38,0.2)]">
                         <div class="flex items-center gap-3 mb-2">
-                            <span class="text-2xl animate-pulse">🔴</span>
+                            <span class="blood-moon-alert-icon">${bloodMoonIcon("blood-moon-icon--alert")}</span>
                             <h3 class="font-cinzel text-xl text-red-400 uppercase tracking-wide">${t("Eclipse Lunar: Lua de Sangue")}</h3>
                         </div>
                         <p class="text-sm text-red-200/80 leading-relaxed italic">
@@ -126,7 +137,7 @@ export const TodayView = {
                         ${bloodMoonCard}
 
                         <div class="bg-slate-800 p-6 rounded-lg shadow-xl flex flex-col md:flex-row items-center justify-between mb-6 border border-slate-700">
-                            <div class="flex items-center space-x-4 mb-4 md:mb-0">${resolveWxSvg(weather.conditionKey, { isBloodMoon: weather.moon.isBloodMoon, sizeClass: "wx-icon-lg" })}<div><p class="text-5xl md:text-6xl font-bold">${weather.currentTemp}°</p><p class="text-xl text-gray-300">${tCondName(weather.conditionKey)}</p></div></div>
+                            <div class="flex items-center space-x-4 mb-4 md:mb-0">${resolveWxSvg(weather.conditionKey, { isBloodMoon: isBloodMoonVisible(weather.conditionKey, currentHour, weather.moon.isBloodMoon), sizeClass: "wx-icon-lg" })}<div><p class="text-5xl md:text-6xl font-bold">${weather.currentTemp}°</p><p class="text-xl text-gray-300">${tCondName(weather.conditionKey)}</p></div></div>
                             <div class="text-center md:text-right space-y-1 w-full md:w-auto">
                                 <p class="text-lg">${t("Sensação")}: <strong>${weather.currentFeelsLike}°</strong></p>
                                 <p class="text-lg font-semibold text-blue-300">${t("Chuva")}: ${weather.precipChance}%</p>

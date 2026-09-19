@@ -20,13 +20,26 @@ function resolveWeatherIcon(conditionKey, moonData) {
     ? WEATHER_CONDITIONS[conditionKey].icon
     : "?";
 }
+function isBloodMoonVisible(conditionKey, hour, isBloodMoon) {
+  const normalizedHour = Number(hour);
+  return Boolean(
+    isBloodMoon &&
+      normalizedHour >= 0 &&
+      normalizedHour <= 3 &&
+      (conditionKey === "clear_night" || conditionKey === "cloudy_night"),
+  );
+}
 function resolveWxSvg(conditionKey, opts = {}) {
   // opts: { isBloodMoon, sizeClass }
   const size = opts.sizeClass || "wx-icon-md";
   let svg;
-  if (opts.isBloodMoon && conditionKey === "clear_night")
+  if (opts.isBloodMoon && conditionKey === "clear_night") {
     svg = WX_SVG.blood_moon;
-  else svg = WX_SVG[conditionKey] || WX_SVG.cloudy_day;
+  } else if (opts.isBloodMoon && conditionKey === "cloudy_night") {
+    svg = WX_SVG.blood_moon_cloudy;
+  } else {
+    svg = WX_SVG[conditionKey] || WX_SVG.cloudy_day;
+  }
   // Injetar classe de tamanho
   return svg.replace('class="wx-icon', `class="wx-icon ${size}`);
 }
@@ -838,4 +851,4 @@ const WeatherEngine = {
   },
 };
 
-export { resolveWeatherIcon, resolveWxSvg, WeatherEngine };
+export { isBloodMoonVisible, resolveWeatherIcon, resolveWxSvg, WeatherEngine };

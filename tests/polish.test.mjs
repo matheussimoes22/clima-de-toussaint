@@ -1,11 +1,29 @@
 import assert from "node:assert/strict";
-import { WeatherEngine as W } from "../assets/js/engine/weather-engine.js";
+import {
+  isBloodMoonVisible,
+  WeatherEngine as W,
+} from "../assets/js/engine/weather-engine.js";
 import { LOCATIONS, SEASONS } from "../assets/js/data/world-data.js";
 import {
   eventHours,
   matchesEvent,
 } from "../assets/js/engine/weather-events.js";
 import { EventBulletinView } from "../assets/js/views/event-bulletins.js";
+import { bloodMoonIcon } from "../assets/js/views/interface-icons.js";
+
+const bloodMoonSvg = bloodMoonIcon("blood-moon-icon--calendar");
+assert.match(bloodMoonSvg, /blood-moon-icon--calendar/);
+assert.match(bloodMoonSvg, /blood-moon-disc/);
+assert.doesNotMatch(bloodMoonSvg, /🔴/u);
+
+const knownBloodMoon = W.getLunarPhase(new Date(2028, 10, 12));
+assert.equal(knownBloodMoon.isBloodMoon, true);
+assert.equal(knownBloodMoon.name, "Lua de Sangue");
+assert.equal(isBloodMoonVisible("clear_night", 0, true), true);
+assert.equal(isBloodMoonVisible("cloudy_night", 3, true), true);
+assert.equal(isBloodMoonVisible("overcast_night", 2, true), false);
+assert.equal(isBloodMoonVisible("clear_night", 4, true), false);
+assert.equal(isBloodMoonVisible("clear_night", 2, false), false);
 const report = [];
 let summerNightHours = 0;
 let hotSummerNightHours = 0;

@@ -24,3 +24,24 @@ export function uiIcon(key) {
   const shape = paths[key === "snow" ? "cold" : key] || paths.pressure;
   return `<svg class="ui-icon ui-icon-${key}" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${shape}</svg>`;
 }
+
+/**
+ * Lua de Sangue autoral: o disco eclipsado continua legível no calendário,
+ * enquanto halo, relevo e crescente de sombra ganham detalhe no card lunar.
+ */
+export function bloodMoonIcon(sizeClass = "blood-moon-icon--inline") {
+  return `<svg class="blood-moon-icon ${sizeClass}" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <circle class="blood-moon-halo blood-moon-halo--outer" cx="32" cy="32" r="28"/>
+    <circle class="blood-moon-halo blood-moon-halo--inner" cx="32" cy="32" r="24"/>
+    <circle class="blood-moon-disc" cx="32" cy="32" r="20"/>
+    <path class="blood-moon-shadow" d="M42.8 15.2A20 20 0 0 1 19.4 47.8 20 20 0 0 0 42.8 15.2Z"/>
+    <path class="blood-moon-light" d="M18.6 22.2A17.2 17.2 0 0 1 39.8 14a20 20 0 0 0-21.7 32.7 17.2 17.2 0 0 1 .5-24.5Z"/>
+    <g class="blood-moon-craters">
+      <circle cx="22.5" cy="28" r="3.6"/>
+      <circle cx="39.5" cy="22.5" r="2.4"/>
+      <circle cx="36.5" cy="40" r="4.2"/>
+      <circle cx="24.5" cy="43" r="1.5"/>
+    </g>
+    <path class="blood-moon-mark" d="M32 3.5 34.2 7 32 10.5 29.8 7Z"/>
+  </svg>`;
+}

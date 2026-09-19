@@ -14,6 +14,9 @@ export const MoonView = {
     const phaseDesc = tMoonDesc(phase.name, phase.desc || "");
 
     const moonClass = phase.isBloodMoon ? "blood-moon-text" : "text-white";
+    const moonCardClass = phase.isBloodMoon
+      ? "moon-phase-card moon-phase-card--blood"
+      : "moon-phase-card";
     const moonSvg = this.renderMoonSvg(
       phase.index,
       phase.illumination,
@@ -90,7 +93,7 @@ export const MoonView = {
     this.elements.main.innerHTML = `
                     <div class="max-w-2xl mx-auto text-center">
                         <h1 class="font-cinzel text-3xl text-amber-400 mb-6">${t("Ciclos Lunares")}</h1>
-                        <div class="bg-slate-800 p-6 rounded-lg shadow-xl mb-6 border border-slate-700">
+                        <div class="${moonCardClass} bg-slate-800 p-6 rounded-lg shadow-xl mb-6 border border-slate-700">
                             <div class="flex justify-center my-2">${moonSvg}</div>
                             <h3 class="font-cinzel text-3xl mt-4 ${moonClass}">${displayPhaseName}</h3>
                             <p class="text-xl text-amber-400 mt-2">${phase.illumination}% ${t("Iluminada")}</p>

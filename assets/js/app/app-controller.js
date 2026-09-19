@@ -1,5 +1,5 @@
 import { findWeatherEvent } from "../engine/weather-events.js";
-import { uiIcon } from "../views/interface-icons.js";
+import { bloodMoonIcon, uiIcon } from "../views/interface-icons.js";
 /**
  * Controlador da interface, navegação, persistência e renderização das telas.
  * Compõe os módulos de dados, idioma, histórico, recordes e motor climático.
@@ -32,7 +32,11 @@ import {
   tSeasonDesc,
   tSeasonName,
 } from "../i18n/translations.js";
-import { resolveWxSvg, WeatherEngine } from "../engine/weather-engine.js";
+import {
+  isBloodMoonVisible,
+  resolveWxSvg,
+  WeatherEngine,
+} from "../engine/weather-engine.js";
 import {
   APP_HISTORY_ID,
   createHistoryState,
@@ -678,12 +682,14 @@ export const App = {
 
   // === SVG da Lua com iluminação real (renderMoon) ===
   renderMoonSvg(phaseIndex, illumination, isBloodMoon) {
+    if (isBloodMoon) return bloodMoonIcon("blood-moon-icon--hero");
+
     // illumination 0-100; phaseIndex 0-7 (0=nova, 4=cheia)
     const isWaning = phaseIndex > 4;
     const lit = Math.max(0, Math.min(100, illumination)) / 100; // 0..1
-    const cls = isBloodMoon ? "moon-svg blood" : "moon-svg";
-    const moonColor = isBloodMoon ? "#7f1d1d" : "#e2e8f0";
-    const shadow = isBloodMoon ? "#3f0a0a" : "#1f2937";
+    const cls = "moon-svg";
+    const moonColor = "#e2e8f0";
+    const shadow = "#1f2937";
     // Construir terminador: usar elipse deslocada para criar o crescente
     // r=80, terminator é uma elipse com rx variando
     const r = 80;
@@ -748,22 +754,32 @@ export const App = {
     const moonClass = weather.moon.isBloodMoon
       ? "blood-moon-text"
       : "text-white";
-    const moonIcon = weather.moon.isBloodMoon ? "🔴" : weather.moon.icon;
+    const moonIcon = weather.moon.isBloodMoon
+      ? bloodMoonIcon("blood-moon-icon--inline")
+      : weather.moon.icon;
 
     let hourlyHtml = '<div class="flex overflow-x-auto space-x-3 pb-4">';
     hourly.forEach((h) => {
       const hourOfForecast = parseInt(h.hour.split(":")[0]);
       const isCurrentHour = hourOfForecast === currentHour;
-      const displayIcon =
-        h.conditionKey === "clear_night"
+      const showBloodMoon = isBloodMoonVisible(
+        h.conditionKey,
+        hourOfForecast,
+        weather.moon.isBloodMoon,
+      );
+      const displayIcon = showBloodMoon
+        ? resolveWxSvg(h.conditionKey, {
+            sizeClass: "wx-icon-sm",
+            isBloodMoon: true,
+          })
+        : h.conditionKey === "clear_night"
           ? h.moonIcon
-          : resolveWxSvg(h.conditionKey, {
-              sizeClass: "wx-icon-sm",
-              isBloodMoon: weather.moon.isBloodMoon,
-            });
-      const cardClasses = isCurrentHour
-        ? "flex-shrink-0 w-20 text-center bg-amber-500/20 p-3 rounded-lg border-2 border-amber-400"
-        : "flex-shrink-0 w-20 text-center bg-slate-700 p-3 rounded-lg";
+          : resolveWxSvg(h.conditionKey, { sizeClass: "wx-icon-sm" });
+      const cardClasses = `${
+        isCurrentHour
+          ? "flex-shrink-0 w-20 text-center bg-amber-500/20 p-3 rounded-lg border-2 border-amber-400"
+          : "flex-shrink-0 w-20 text-center bg-slate-700 p-3 rounded-lg"
+      }${showBloodMoon ? " blood-moon-forecast-hour" : ""}`;
       const textClasses = isCurrentHour ? "text-amber-300" : "text-gray-400";
       hourlyHtml += `<div class="${cardClasses}" aria-label="${h.hour}: ${tCondName(h.conditionKey)}, ${h.temp}°, ${Math.round(h.humidity)}% ${t("Umidade")}"><p class="text-sm ${textClasses}">${h.hour}</p><p class="text-2xl my-1" aria-hidden="true">${displayIcon}</p><p class="text-lg font-bold">${h.temp}°</p><p class="text-xs ${textClasses}">${t("Umid.")} ${Math.round(h.humidity)}%</p></div>`;
     });

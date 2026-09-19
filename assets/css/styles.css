@@ -394,15 +394,10 @@ body.fx-stars #weather-bg::after {
 
 /* LUA DE SANGUE: glow vermelho + viés cromático */
 body.fx-bloodmoon #weather-bg {
-  background: radial-gradient(
-    ellipse at 50% 30%,
-    rgba(127, 29, 29, 0.45),
-    transparent 65%
-  );
+  background:
+    radial-gradient(circle at 72% 18%, rgba(220, 38, 38, 0.2), transparent 24%),
+    radial-gradient(ellipse at 50% 30%, rgba(127, 29, 29, 0.5), transparent 68%);
   animation: bloodmoon-pulse 4s ease-in-out infinite;
-}
-body.fx-bloodmoon main {
-  filter: hue-rotate(-8deg) saturate(1.15);
 }
 @keyframes bloodmoon-pulse {
   0%,
@@ -607,8 +602,136 @@ select option {
 
 /* === LUA DE SANGUE === */
 .blood-moon-text {
-  color: #ef4444;
-  text-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+  color: #f87171;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.78);
+}
+.blood-moon-icon {
+  display: inline-block;
+  overflow: visible;
+  flex: none;
+  vertical-align: -0.18em;
+  filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.55));
+}
+.blood-moon-icon--inline {
+  width: 1.35em;
+  height: 1.35em;
+}
+.blood-moon-icon--alert {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+.blood-moon-icon--calendar {
+  width: 1rem;
+  height: 1rem;
+}
+.calendar-moon .blood-moon-icon--calendar {
+  width: 100%;
+  height: 100%;
+}
+.blood-moon-icon--hero {
+  width: 10rem;
+  height: 10rem;
+}
+.blood-moon-halo {
+  fill: none;
+  transform-origin: center;
+}
+.blood-moon-halo--outer {
+  stroke: #7f1d1d;
+  stroke-width: 1.4;
+  stroke-dasharray: 2.5 3.5;
+  opacity: 0.7;
+  animation: blood-moon-orbit 18s linear infinite;
+}
+.blood-moon-halo--inner {
+  stroke: #ef4444;
+  stroke-width: 1.2;
+  opacity: 0.3;
+}
+.blood-moon-disc {
+  fill: #991b1b;
+  stroke: #f87171;
+  stroke-width: 0.8;
+}
+.blood-moon-shadow {
+  fill: #450a0a;
+  opacity: 0.8;
+}
+.blood-moon-light {
+  fill: #ef4444;
+  opacity: 0.42;
+}
+.blood-moon-craters {
+  fill: #3f0a0a;
+  opacity: 0.5;
+}
+.blood-moon-mark {
+  fill: #fca5a5;
+  opacity: 0.82;
+}
+.blood-moon-alert-icon {
+  display: inline-grid;
+  place-items: center;
+  animation: blood-moon-icon-pulse 3.2s ease-in-out infinite;
+}
+.moon-phase-card--blood {
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(127, 29, 29, 0.32),
+      transparent 48%
+    ),
+    rgba(30, 20, 31, 0.94) !important;
+  box-shadow:
+    0 20px 45px -28px rgba(239, 68, 68, 0.9),
+    inset 0 0 35px rgba(127, 29, 29, 0.16);
+}
+.calendar-day.blood-moon-day {
+  border: 1px solid rgba(239, 68, 68, 0.48);
+  background:
+    radial-gradient(circle at 82% 18%, rgba(239, 68, 68, 0.2), transparent 32%),
+    rgba(52, 22, 32, 0.94);
+  box-shadow: inset 0 0 18px rgba(127, 29, 29, 0.24);
+}
+.calendar-day.blood-moon-day:hover {
+  background:
+    radial-gradient(
+      circle at 82% 18%,
+      rgba(248, 113, 113, 0.28),
+      transparent 34%
+    ),
+    rgba(69, 24, 37, 0.98);
+}
+.calendar-moon--blood {
+  filter: brightness(1.2);
+}
+.calendar-moon--blood .blood-moon-icon {
+  transform: scale(1.16);
+  filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.8));
+}
+.blood-moon-forecast-hour {
+  border-color: rgba(248, 113, 113, 0.78) !important;
+  background: rgba(127, 29, 29, 0.3) !important;
+  box-shadow:
+    inset 0 0 18px rgba(127, 29, 29, 0.28),
+    0 0 14px rgba(239, 68, 68, 0.12);
+}
+@keyframes blood-moon-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes blood-moon-icon-pulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.16);
+  }
 }
 
 /* === CARDS === */
@@ -1596,6 +1719,45 @@ button.event-pill.alert-red:hover {
 }
 .nav-button svg {
   stroke-width: 1.7;
+}
+
+/* O fenômeno ativo troca o ouro por vinho/vermelho sem recolorir o conteúdo inteiro. */
+body.fx-bloodmoon .app-nav {
+  border-color: rgba(239, 68, 68, 0.3);
+  background:
+    linear-gradient(180deg, rgba(39, 10, 19, 0.96), rgba(2, 6, 23, 0.98)),
+    #020617;
+  box-shadow: 8px 0 34px -24px rgba(239, 68, 68, 0.85);
+}
+body.fx-bloodmoon .nav-button[aria-current="page"] {
+  color: #fca5a5 !important;
+  background-color: rgba(127, 29, 29, 0.36) !important;
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.22);
+}
+body.fx-bloodmoon .nav-button[aria-current="page"] svg {
+  color: #f87171 !important;
+}
+body.fx-bloodmoon .toussaint-header-container {
+  border-bottom-color: rgba(248, 113, 113, 0.34);
+}
+body.fx-bloodmoon .toussaint-header-container::after {
+  color: #ef4444;
+}
+body.fx-bloodmoon .toussaint-title,
+body.fx-bloodmoon #main-content .text-amber-400 {
+  color: #f87171 !important;
+  text-shadow: 0 0 16px rgba(239, 68, 68, 0.32);
+}
+body.fx-bloodmoon .toussaint-subtitle {
+  color: #fecaca;
+}
+body.fx-bloodmoon #main-content .bg-slate-800,
+body.fx-bloodmoon #modal-content {
+  border-color: rgba(248, 113, 113, 0.24) !important;
+  background-color: rgba(42, 18, 30, 0.9) !important;
+}
+body.fx-bloodmoon #real-time-clock {
+  text-shadow: 0 0 18px rgba(239, 68, 68, 0.28);
 }
 @media (max-width: 767px) {
   #main-content:has(#calendar-grid) {

@@ -11,7 +11,7 @@ import {
 } from "../i18n/translations.js";
 import { resolveWxSvg, WeatherEngine } from "../engine/weather-engine.js";
 import { writeStoredValue } from "../state/preferences.js";
-import { uiIcon } from "./interface-icons.js";
+import { bloodMoonIcon, uiIcon } from "./interface-icons.js";
 import { bindCalendarSwipe } from "../navigation/calendar-swipe.js";
 
 export const CalendarView = {
@@ -70,15 +70,18 @@ export const CalendarView = {
         "calendar-day p-2 h-24 md:h-32 bg-slate-800 hover:bg-slate-700 cursor-pointer transition-colors";
       if (isToday) classes += " today";
       if (isPast) classes += " past";
+      if (weather.moon.isBloodMoon) classes += " blood-moon-day";
       const moonName = this.state.isElven
         ? ELVEN_DATA.moonPhases[weather.moon.name]
         : tMoonName(weather.moon.name);
 
       // No calendário, Lua de Sangue sempre aparece vermelha para indicar o dia do evento
       const moonClass = weather.moon.isBloodMoon
-        ? "blood-moon-text"
+        ? "blood-moon-text calendar-moon--blood"
         : "text-gray-400";
-      const moonIconCal = weather.moon.isBloodMoon ? "🔴" : weather.moon.icon;
+      const moonIconCal = weather.moon.isBloodMoon
+        ? bloodMoonIcon("blood-moon-icon--calendar")
+        : weather.moon.icon;
 
       const dailyIcon = resolveWxSvg(weather.conditionKey, {
         sizeClass: "calendar-weather-icon",
