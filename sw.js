@@ -1,5 +1,5 @@
 /* Service Worker - Clima de Toussaint */
-const CACHE = "toussaint-v11-android-identity";
+const CACHE = "toussaint-v12-android-navigation";
 const ASSETS = [
   "./",
   "./index.html",

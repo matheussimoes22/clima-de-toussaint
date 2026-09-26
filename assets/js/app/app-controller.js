@@ -40,6 +40,7 @@ import {
 import {
   APP_HISTORY_ID,
   createHistoryState,
+  getHistoryDepth,
   getInitialView,
   pushLayer,
   pushView,
@@ -203,6 +204,9 @@ export const App = {
     replaceInitialHistory(initialView);
     window.addEventListener("popstate", (event) => {
       self.applyHistoryState(event.state);
+    });
+    window.addEventListener("toussaint:native-back", () => {
+      self.handleNativeBack();
     });
     this.refreshAllLocationRecords(this.state.currentDate);
     this.navigate(initialView, { historyMode: "none" });
@@ -369,6 +373,26 @@ export const App = {
         wasModalOpen && state.layer !== "modal" && state.view === previousView,
     });
     this._historyClosePending = false;
+  },
+
+  /** Trata o Voltar nativo sem permitir que a tela raiz encerre o aplicativo. */
+  handleNativeBack() {
+    if (this.settingsPanel?.classList.contains("open")) {
+      this.closeSettings();
+      return;
+    }
+    if (this.elements.modal.classList.contains("open")) {
+      this.closeModal();
+      return;
+    }
+    if (getHistoryDepth() > 0) {
+      history.back();
+      return;
+    }
+    if (this.state.currentView !== "today") {
+      this.navigate("today", { historyMode: "none" });
+      replaceInitialHistory("today");
+    }
   },
 
   /** Abre ou fecha visualmente o painel de ajustes sem alterar o histórico. */

@@ -121,7 +121,9 @@ npm run android:open  # sincroniza e abre o projeto no Android Studio
 
 No Android Studio, configure o **Gradle JDK** como JDK 21, selecione o emulador ou aparelho e use **Run**. Para gerar um APK instalável de desenvolvimento, use **Build > Build APK(s)**; o resultado fica em `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-O identificador é `com.matheussimoes22.climadetoussaint`. A primeira compilação Android usa `versionName 2.0.0` e `versionCode 1`. O ícone e a abertura usam o emblema provisório do cavaleiro de Toussaint. A publicação no Google Play não faz parte desta etapa.
+O identificador é `com.matheussimoes22.climadetoussaint`. A primeira compilação Android usa `versionName 2.0.0` e `versionCode 1`. O launcher oferece ícones normal, redondo, adaptativo e monocromático com uma composição climática inspirada nos vinhedos de Toussaint; a tela de abertura e o favicon preservam o medalhão do cavaleiro. A máscara e a área segura do ícone ficam a cargo do Android.
+
+No aplicativo nativo, o botão ou gesto **Voltar** fecha primeiro ajustes e diálogos, depois percorre as telas já visitadas. Na tela inicial ele permanece no aplicativo, em vez de encerrar a Activity. A navegação inferior também recebe uma apresentação flutuante própria do Android, sem alterar o layout da versão web. A publicação no Google Play não faz parte desta etapa.
 
 ## Persistência
 

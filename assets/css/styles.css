@@ -70,6 +70,182 @@ nav,
     width: 100%;
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
+
+  /* No Android, a navegação vira uma barra flutuante com área segura própria. */
+  html.native-app main#main-content {
+    padding-bottom: calc(7.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  html.native-app nav.app-nav {
+    bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    left: 0.7rem;
+    right: 0.7rem;
+    width: auto;
+    padding: 0.42rem;
+    overflow: hidden;
+    border: 1px solid rgba(251, 191, 36, 0.34);
+    border-radius: 1.35rem;
+    background: linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 0.76),
+      rgba(30, 41, 59, 0.64)
+    );
+    box-shadow:
+      0 18px 44px rgba(2, 6, 23, 0.5),
+      0 5px 14px rgba(2, 6, 23, 0.28),
+      inset 0 1px rgba(255, 255, 255, 0.13),
+      inset 0 -1px rgba(15, 23, 42, 0.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    backdrop-filter: blur(22px) saturate(1.35);
+  }
+  html.native-app nav.app-nav::before {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(
+        circle at 16% -35%,
+        rgba(255, 255, 255, 0.2),
+        transparent 46%
+      ),
+      linear-gradient(
+        105deg,
+        transparent 20%,
+        rgba(251, 191, 36, 0.06) 48%,
+        transparent 74%
+      );
+    content: "";
+    pointer-events: none;
+  }
+  html.native-app nav.app-nav ul {
+    position: relative;
+    z-index: 1;
+    align-items: stretch;
+    gap: 0.22rem;
+  }
+  html.native-app nav.app-nav li {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  html.native-app .nav-button {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    width: 100%;
+    min-height: 3.65rem;
+    gap: 0.18rem;
+    padding: 0.48rem 0.2rem 0.38rem;
+    border-radius: 1rem;
+    transition:
+      color 180ms ease,
+      background-color 180ms ease,
+      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 180ms ease;
+  }
+  html.native-app .nav-button:active {
+    transform: translateY(1px) scale(0.93);
+  }
+  html.native-app .nav-button::after {
+    position: absolute;
+    z-index: -1;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.34);
+    content: "";
+    opacity: 0;
+    transform: scale(0);
+  }
+  html.native-app .nav-button.is-tapping {
+    animation: native-nav-tap 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  html.native-app .nav-button.is-tapping::after {
+    animation: native-nav-ripple 420ms ease-out;
+  }
+  html.native-app .nav-button.is-tapping svg {
+    animation: native-nav-icon 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  html.native-app .nav-button svg {
+    width: 1.42rem;
+    height: 1.42rem;
+  }
+  html.native-app .nav-button .nav-label {
+    max-width: 100%;
+    overflow: hidden;
+    color: rgba(243, 237, 218, 0.8);
+    font-size: 0.68rem;
+    line-height: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  html.native-app .nav-button[aria-current="page"] {
+    color: #ffe7a1 !important;
+    background: linear-gradient(
+      180deg,
+      rgba(251, 191, 36, 0.16),
+      rgba(251, 191, 36, 0.07)
+    ) !important;
+    box-shadow:
+      inset 0 0 0 1px rgba(251, 191, 36, 0.28),
+      inset 0 1px rgba(255, 255, 255, 0.08),
+      0 6px 16px rgba(2, 6, 23, 0.24);
+  }
+  html.native-app .nav-button[aria-current="page"]::before {
+    position: absolute;
+    top: 0.2rem;
+    width: 1.15rem;
+    height: 0.14rem;
+    border-radius: 999px;
+    background: #f5cf70;
+    box-shadow: 0 0 8px rgba(245, 207, 112, 0.72);
+    content: "";
+  }
+  html.native-app .nav-button[aria-current="page"] .nav-label {
+    color: #fff4ce;
+    font-weight: 700;
+  }
+}
+
+@keyframes native-nav-tap {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  42% {
+    transform: translateY(1px) scale(0.91);
+  }
+  72% {
+    transform: translateY(-2px) scale(1.04);
+  }
+}
+
+@keyframes native-nav-ripple {
+  0% {
+    opacity: 0.6;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+
+@keyframes native-nav-icon {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-0.18rem) scale(1.13);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.native-app .nav-button,
+  html.native-app .nav-button::after,
+  html.native-app .nav-button svg {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* === MENU DE AJUSTES MOBILE === */

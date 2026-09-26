@@ -4,6 +4,21 @@
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const isNativeApp = window.Capacitor?.isNativePlatform?.() === true;
+  document.documentElement.classList.toggle("native-app", isNativeApp);
+
+  if (isNativeApp) {
+    // Reinicia o efeito a cada toque, inclusive quando a tela já está ativa.
+    document.querySelectorAll(".nav-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.classList.remove("is-tapping");
+        void button.offsetWidth;
+        button.classList.add("is-tapping");
+        setTimeout(() => button.classList.remove("is-tapping"), 430);
+      });
+    });
+  }
+
   try {
     // As folhas nao bloqueiam a splash, mas devem estar prontas antes do aplicativo.
     const styles = Array.from(
@@ -38,7 +53,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const isNativeApp = window.Capacitor?.isNativePlatform?.() === true;
   if (!isNativeApp && "serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(() => {
       // O aplicativo continua funcional online mesmo se o cache offline falhar.
