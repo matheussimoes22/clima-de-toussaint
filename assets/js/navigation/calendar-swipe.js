@@ -9,24 +9,86 @@ export function swipeDirection(dx, dy, elapsed, width) {
   return dx < 0 ? 1 : -1;
 }
 
-/** Acrescenta gesto touch ao grid, preservando cliques, botões e rolagem vertical. */
-export function bindCalendarSwipe(grid, changeMonth) {
+/**
+ * Liga o gesto ao trilho com os meses anterior, atual e seguinte.
+ * O mês vizinho acompanha o dedo e só passa a ser o mês ativo ao fim do gesto.
+ */
+export function bindCalendarSwipe(viewport, track, changeMonth) {
   let start = null;
   let suppressClick = false;
   let moving = false;
+  let gestureWidth = 0;
+  let pendingOffset = null;
+  let animationFrame = 0;
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const reset = () => {
-    if (grid.style) {
-      grid.style.transform = "";
-      grid.style.transition = "";
+  const width = () => Math.max(1, gestureWidth || viewport.clientWidth || 1);
+  const center = () => -width();
+
+  const setTrackPosition = (offset, transition = "none") => {
+    if (!track?.style) return;
+    track.style.transition = transition;
+    track.style.transform = `translate3d(${center() + offset}px, 0, 0)`;
+  };
+  const flushTrackPosition = () => {
+    if (animationFrame && typeof cancelAnimationFrame === "function")
+      cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    if (pendingOffset === null) return;
+    setTrackPosition(pendingOffset);
+    pendingOffset = null;
+  };
+  const scheduleTrackPosition = (offset) => {
+    pendingOffset = offset;
+    if (animationFrame) return;
+    if (typeof requestAnimationFrame !== "function") {
+      flushTrackPosition();
+      return;
     }
+    animationFrame = requestAnimationFrame(() => {
+      animationFrame = 0;
+      if (pendingOffset === null) return;
+      setTrackPosition(pendingOffset);
+      pendingOffset = null;
+    });
   };
   const settle = () => {
-    if (!grid.style) return;
-    grid.style.transition = reduced() ? "none" : "transform 180ms ease-out";
-    grid.style.transform = "";
+    flushTrackPosition();
+    setTrackPosition(
+      0,
+      reduced() ? "none" : "transform 220ms cubic-bezier(.2,.8,.2,1)",
+    );
   };
-  grid.addEventListener(
+  const finishMonthChange = (delta) => {
+    moving = false;
+    changeMonth(delta);
+  };
+  const moveTo = (delta, suppressFollowingClick = false) => {
+    if (!delta || moving) return;
+    flushTrackPosition();
+    gestureWidth = viewport.clientWidth || gestureWidth;
+    suppressClick = suppressFollowingClick;
+    if (reduced() || !track?.animate) {
+      finishMonthChange(delta);
+      return;
+    }
+    moving = true;
+    const from = track.style.transform || `translate3d(${center()}px, 0, 0)`;
+    const to = `translate3d(${center() - delta * width()}px, 0, 0)`;
+    const animation = track.animate([{ transform: from }, { transform: to }], {
+      duration: 260,
+      easing: "cubic-bezier(.2,.8,.2,1)",
+      fill: "forwards",
+    });
+    animation.finished
+      .then(() => finishMonthChange(delta))
+      .catch(() => {
+        moving = false;
+        settle();
+      });
+  };
+
+  setTrackPosition(0);
+  viewport.addEventListener(
     "touchstart",
     (event) => {
       if (
@@ -39,13 +101,14 @@ export function bindCalendarSwipe(grid, changeMonth) {
       }
       if (moving) return;
       suppressClick = false;
-      reset();
+      gestureWidth = viewport.clientWidth || 1;
+      setTrackPosition(0);
       const touch = event.touches[0];
       start = { x: touch.clientX, y: touch.clientY, time: performance.now() };
     },
     { passive: true },
   );
-  grid.addEventListener(
+  viewport.addEventListener(
     "touchmove",
     (event) => {
       if (!start || event.touches.length !== 1) {
@@ -61,23 +124,19 @@ export function bindCalendarSwipe(grid, changeMonth) {
         settle();
         return;
       }
-      if (
-        Math.abs(dx) > 12 &&
-        Math.abs(dx) > Math.abs(dy) * 1.8 &&
-        grid.style
-      ) {
-        grid.style.transform = reduced()
-          ? ""
-          : `translateX(${Math.max(-grid.clientWidth * 0.4, Math.min(grid.clientWidth * 0.4, dx * 0.65))}px)`;
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+        event.preventDefault();
+        const drag = Math.max(-width(), Math.min(width(), dx));
+        scheduleTrackPosition(drag);
       }
     },
-    { passive: true },
+    { passive: false },
   );
-  grid.addEventListener("touchcancel", () => {
+  viewport.addEventListener("touchcancel", () => {
     start = null;
     settle();
   });
-  grid.addEventListener(
+  viewport.addEventListener(
     "touchend",
     (event) => {
       if (!start) return;
@@ -86,7 +145,7 @@ export function bindCalendarSwipe(grid, changeMonth) {
         touch.clientX - start.x,
         touch.clientY - start.y,
         performance.now() - start.time,
-        grid.clientWidth,
+        width(),
       );
       start = null;
       if (!delta) {
@@ -94,44 +153,11 @@ export function bindCalendarSwipe(grid, changeMonth) {
         return;
       }
       event.preventDefault();
-      suppressClick = true;
-      if (!grid.animate || reduced()) {
-        reset();
-        changeMonth(delta);
-        return;
-      }
-      moving = true;
-      const animation = grid.animate(
-        [
-          { transform: grid.style.transform || "translateX(0)", opacity: 1 },
-          {
-            transform: `translateX(${-delta * grid.clientWidth * 0.55}px)`,
-            opacity: 0,
-          },
-        ],
-        { duration: 150, easing: "ease-in", fill: "forwards" },
-      );
-      animation.finished
-        .then(() => {
-          if (!grid.isConnected) return;
-          changeMonth(delta);
-          const next = document.getElementById("calendar-grid");
-          next?.animate(
-            [
-              { transform: `translateX(${delta * 60}px)`, opacity: 0 },
-              { transform: "translateX(0)", opacity: 1 },
-            ],
-            { duration: 210, easing: "cubic-bezier(.2,.8,.2,1)" },
-          );
-        })
-        .catch(() => {
-          moving = false;
-          reset();
-        });
+      moveTo(delta, true);
     },
     { passive: false },
   );
-  grid.addEventListener(
+  viewport.addEventListener(
     "click",
     (event) => {
       if (suppressClick) {
@@ -142,4 +168,5 @@ export function bindCalendarSwipe(grid, changeMonth) {
     },
     true,
   );
+  return { moveTo: (delta) => moveTo(delta, false) };
 }

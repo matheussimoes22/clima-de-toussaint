@@ -421,13 +421,128 @@ export const App = {
     }
   },
 
-  /** Abre o diálogo e move o foco sem alterar seu conteúdo. */
-  openModal() {
+  /** Abre o diálogo e, no calendário, expande visualmente a partir do card. */
+  openModal({ variant = "default", sourceElement = null } = {}) {
+    clearTimeout(this._modalCloseCleanup);
+    this._modalCloseAnimation?.cancel?.();
+    this._modalCloseAnimation = null;
     this._historyClosePending = false;
     this._focusBeforeModal = document.activeElement;
     this.setSettingsOpen(false);
+    this.elements.modal.classList.toggle("day-detail-modal", variant === "day");
+    this._dayModalSource = variant === "day" ? sourceElement : null;
     this.setModalOpen(true);
+    if (variant === "day" && sourceElement) {
+      // Instala a transformação antes da próxima pintura para não exibir
+      // o painel grande por um quadro antes de ele nascer do card.
+      this.animateDayModalFrom(sourceElement);
+    }
     pushLayer(this.state.currentView, "modal");
+  },
+
+  /** Executa um FLIP: o painel nasce do retângulo do dia selecionado. */
+  animateDayModalFrom(sourceElement) {
+    if (
+      matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !sourceElement?.isConnected ||
+      !this.elements.modalContent?.animate
+    )
+      return;
+    const source = sourceElement.getBoundingClientRect();
+    const target = this.elements.modalContent.getBoundingClientRect();
+    if (!source.width || !target.width) return;
+    const translateX =
+      source.left + source.width / 2 - (target.left + target.width / 2);
+    const translateY =
+      source.top + source.height / 2 - (target.top + target.height / 2);
+    const scaleX = Math.max(0.08, source.width / target.width);
+    const scaleY = Math.max(0.08, source.height / target.height);
+    this._modalAnimation?.cancel?.();
+    this._modalAnimation = this.elements.modalContent.animate(
+      [
+        {
+          transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`,
+          opacity: 0.92,
+          offset: 0,
+        },
+        {
+          transform: `translate(${translateX * 0.82}px, ${translateY * 0.82}px) scale(${Math.min(1, scaleX * 1.18)}, ${Math.min(1, scaleY * 1.18)})`,
+          opacity: 1,
+          offset: 0.2,
+        },
+        {
+          transform: "translate(0, 0) scale(1)",
+          opacity: 1,
+          offset: 1,
+        },
+      ],
+      {
+        duration: 560,
+        easing: "cubic-bezier(.18,.82,.2,1)",
+      },
+    );
+    const revealTargets = [
+      this.elements.modalContent.firstElementChild,
+      this.elements.modalBody,
+    ].filter(Boolean);
+    revealTargets.forEach((element) =>
+      element.animate(
+        [
+          { opacity: 0, transform: "translateY(12px)", offset: 0 },
+          { opacity: 0, transform: "translateY(12px)", offset: 0.24 },
+          { opacity: 1, transform: "translateY(0)", offset: 1 },
+        ],
+        { duration: 560, easing: "cubic-bezier(.18,.8,.2,1)" },
+      ),
+    );
+    sourceElement.animate(
+      [
+        { transform: "scale(1)", opacity: 1 },
+        { transform: "scale(0.96)", opacity: 0.72 },
+      ],
+      { duration: 150, easing: "ease-out" },
+    );
+  },
+
+  /** Recolhe a folha no card de origem quando ele ainda está no calendário. */
+  animateDayModalToSource() {
+    const sourceElement = this._dayModalSource;
+    if (
+      matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !sourceElement?.isConnected ||
+      !this.elements.modalContent?.animate
+    )
+      return Promise.resolve();
+    const source = sourceElement.getBoundingClientRect();
+    const target = this.elements.modalContent.getBoundingClientRect();
+    const translateX =
+      source.left + source.width / 2 - (target.left + target.width / 2);
+    const translateY =
+      source.top + source.height / 2 - (target.top + target.height / 2);
+    const scaleX = Math.max(0.08, source.width / target.width);
+    const scaleY = Math.max(0.08, source.height / target.height);
+    this._modalCloseAnimation = this.elements.modalContent.animate(
+      [
+        { transform: "translate(0, 0) scale(1)", opacity: 1 },
+        {
+          transform: `translate(${translateX * 0.84}px, ${translateY * 0.84}px) scale(${Math.max(0.08, scaleX * 1.16)}, ${Math.max(0.08, scaleY * 1.16)})`,
+          opacity: 0.9,
+          offset: 0.78,
+        },
+        {
+          transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`,
+          // O painel some antes de permanecer sobre o card de origem. Sem
+          // isso, o quadro final parece uma miniatura/artefato no calendário.
+          opacity: 0,
+        },
+      ],
+      {
+        duration: 220,
+        easing: "cubic-bezier(.4,0,.8,.2)",
+        fill: "forwards",
+      },
+    );
+    return this._modalCloseAnimation.finished.catch(() => undefined);
   },
 
   openDetailModal(type) {
@@ -752,7 +867,7 @@ export const App = {
                 </svg>`;
   },
 
-  openDayModal(date) {
+  openDayModal(date, sourceElement = null) {
     const self = this;
     const weather = WeatherEngine.getWeatherForDay(
       date,
@@ -829,8 +944,20 @@ export const App = {
                     <p class="text-xl md:text-2xl font-bold ${moonClass}">${displayMoonPhase} (${weather.moon.illumination}%)</p>
                 </div>`;
 
-    this.elements.modalBody.innerHTML = `<h4 class="font-cinzel text-xl text-amber-400 mb-4">${t("Previsão 24h")} (${tLocationName(this.state.currentLocation)})</h4>${hourlyHtml}${detailsHtml}${holidayHtml}`;
-    this.openModal();
+    const overviewIcon = resolveWxSvg(weather.conditionKey, {
+      sizeClass: "day-detail-weather-icon",
+    });
+    const overviewHtml = `<section class="day-detail-hero" aria-label="${tCondName(weather.conditionKey)}, ${t("Max")} ${weather.tempMax}°, ${t("Min")} ${weather.tempMin}°">
+      <span class="day-detail-hero-icon" aria-hidden="true">${overviewIcon}</span>
+      <div class="day-detail-hero-copy">
+        <p class="day-detail-location">${tLocationName(this.state.currentLocation)}</p>
+        <p class="day-detail-condition">${tCondName(weather.conditionKey)}</p>
+        <p class="day-detail-temperature"><strong>${weather.tempMax}°</strong><span>${weather.tempMin}°</span></p>
+      </div>
+      <span class="day-detail-rain">${uiIcon("drop")} ${weather.precipChance}%</span>
+    </section>`;
+    this.elements.modalBody.innerHTML = `${overviewHtml}<h4 class="day-detail-section-title font-cinzel text-lg text-amber-400 mt-6 mb-4">${t("Previsão 24h")}</h4>${hourlyHtml}${detailsHtml}${holidayHtml}`;
+    this.openModal({ variant: "day", sourceElement });
     this.elements.modalBody.scrollTop = 0;
   },
 
@@ -896,17 +1023,35 @@ export const App = {
 
   /** Fecha o diálogo pela entrada anterior para que Voltar e o botão X coincidam. */
   closeModal() {
+    if (this._modalClosing || this._historyClosePending) return;
+    const finish = () => {
+      this._modalClosing = false;
+      if (
+        history.state?.appId === APP_HISTORY_ID &&
+        history.state.layer === "modal"
+      ) {
+        this._historyClosePending = true;
+        this.setModalOpen(false);
+        history.back();
+      } else {
+        this.setModalOpen(false);
+      }
+      // Mantém o último quadro recolhido enquanto o fundo termina de sumir.
+      clearTimeout(this._modalCloseCleanup);
+      this._modalCloseCleanup = setTimeout(() => {
+        this._modalCloseAnimation?.cancel?.();
+        this._modalCloseAnimation = null;
+      }, 320);
+    };
     if (
-      history.state?.appId === APP_HISTORY_ID &&
-      history.state.layer === "modal"
+      this.elements.modal.classList.contains("day-detail-modal") &&
+      this.elements.modal.classList.contains("open")
     ) {
-      if (this._historyClosePending) return;
-      this._historyClosePending = true;
-      this.setModalOpen(false);
-      history.back();
-    } else {
-      this.setModalOpen(false);
+      this._modalClosing = true;
+      this.animateDayModalToSource().finally(finish);
+      return;
     }
+    finish();
   },
   renderDetailCard(title, value, icon, type = "", interactive = true) {
     const isInteractive = interactive && type;

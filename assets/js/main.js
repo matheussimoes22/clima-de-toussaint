@@ -8,13 +8,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.documentElement.classList.toggle("native-app", isNativeApp);
 
   if (isNativeApp) {
-    // Reinicia o efeito a cada toque, inclusive quando a tela já está ativa.
+    // Um retorno curto confirma o toque sem fazer o ícone saltar ou distrair.
     document.querySelectorAll(".nav-button").forEach((button) => {
       button.addEventListener("click", () => {
         button.classList.remove("is-tapping");
         void button.offsetWidth;
         button.classList.add("is-tapping");
-        setTimeout(() => button.classList.remove("is-tapping"), 430);
+        setTimeout(() => button.classList.remove("is-tapping"), 220);
       });
     });
   }

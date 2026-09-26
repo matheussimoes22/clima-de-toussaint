@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Clima de Toussaint</title>
+  <defs>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff2a8"/>
+      <stop offset="1" stop-color="#e2aa2e"/>
+    </linearGradient>
+    <linearGradient id="cloud" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#b9c7d8"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#d5a63a" stroke-linecap="round" stroke-width="2.6">
+    <path d="M31 4v5M13 11l4 4M49 11l-4 4M6 29h6M50 29h6"/>
+  </g>
+  <circle cx="31" cy="28" r="15" fill="url(#sun)" stroke="#8d641a" stroke-width="2"/>
+  <path d="M13 46c0-6 4.9-10.8 10.9-10.8 1.8-6.2 7.2-10.2 13.4-9.4 5.1.7 9.3 4.5 10.5 9.4h.8A9.4 9.4 0 0 1 58 44.6C58 50 53.8 54 48.5 54H22.1A9.1 9.1 0 0 1 13 46Z" fill="url(#cloud)" stroke="#334155" stroke-width="2.2"/>
+  <g fill="#8f2943" stroke="#f0cb6f" stroke-width="1">
+    <circle cx="17" cy="50" r="3.1"/><circle cx="22" cy="50" r="3.1"/>
+    <circle cx="19.5" cy="54.4" r="3.1"/><circle cx="19.5" cy="58.7" r="2.5"/>
+  </g>
+  <path d="M19 46c1.1-3.5 3.3-5.7 6.8-6.9-1.1 3.5-3.2 5.7-6.8 6.9Z" fill="#789f4a" stroke="#365c2c" stroke-width="1.1"/>
+</svg>

@@ -142,7 +142,7 @@ nav,
       box-shadow 180ms ease;
   }
   html.native-app .nav-button:active {
-    transform: translateY(1px) scale(0.93);
+    transform: scale(0.975);
   }
   html.native-app .nav-button::after {
     position: absolute;
@@ -150,19 +150,19 @@ nav,
     width: 1rem;
     height: 1rem;
     border-radius: 999px;
-    background: rgba(251, 191, 36, 0.34);
+    background: rgba(251, 191, 36, 0.2);
     content: "";
     opacity: 0;
     transform: scale(0);
   }
   html.native-app .nav-button.is-tapping {
-    animation: native-nav-tap 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: native-nav-tap 210ms ease-out;
   }
   html.native-app .nav-button.is-tapping::after {
-    animation: native-nav-ripple 420ms ease-out;
+    animation: native-nav-ripple 210ms ease-out;
   }
   html.native-app .nav-button.is-tapping svg {
-    animation: native-nav-icon 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: native-nav-icon 210ms ease-out;
   }
   html.native-app .nav-button svg {
     width: 1.42rem;
@@ -210,22 +210,19 @@ nav,
   100% {
     transform: scale(1);
   }
-  42% {
-    transform: translateY(1px) scale(0.91);
-  }
-  72% {
-    transform: translateY(-2px) scale(1.04);
+  48% {
+    transform: scale(0.965);
   }
 }
 
 @keyframes native-nav-ripple {
   0% {
-    opacity: 0.6;
-    transform: scale(0);
+    opacity: 0.35;
+    transform: scale(0.7);
   }
   100% {
     opacity: 0;
-    transform: scale(7);
+    transform: scale(3.2);
   }
 }
 
@@ -235,7 +232,7 @@ nav,
     transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-0.18rem) scale(1.13);
+    transform: scale(0.92);
   }
 }
 
@@ -601,10 +598,204 @@ body.fx-bloodmoon #weather-bg {
   transform: translateY(0);
 }
 
+/* O detalhe diário se comporta como uma folha ligada ao card selecionado. */
+#modal.day-detail-modal #modal-content {
+  transform-origin: center;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+.day-detail-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  padding: 1rem;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(
+      circle at 12% 20%,
+      rgba(251, 191, 36, 0.16),
+      transparent 42%
+    ),
+    linear-gradient(135deg, rgba(51, 65, 85, 0.92), rgba(15, 23, 42, 0.86));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+}
+.day-detail-hero::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.05),
+    transparent 65%
+  );
+  content: "";
+  pointer-events: none;
+}
+.day-detail-hero-icon {
+  display: grid;
+  width: 4.25rem;
+  height: 4.25rem;
+  place-items: center;
+  filter: drop-shadow(0 7px 12px rgba(2, 6, 23, 0.38));
+}
+.day-detail-weather-icon {
+  width: 3.7rem;
+  height: 3.7rem;
+}
+.day-detail-hero-copy {
+  min-width: 0;
+}
+.day-detail-location {
+  overflow: hidden;
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.day-detail-condition {
+  margin-top: 0.15rem;
+  color: #fff7d6;
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.day-detail-temperature {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+.day-detail-temperature strong {
+  color: #fff;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+.day-detail-temperature span {
+  color: #aebdd0;
+  font-size: 1rem;
+}
+.day-detail-rain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.38rem 0.5rem;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 999px;
+  color: #bae6fd;
+  background: rgba(14, 116, 144, 0.16);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.day-detail-rain .ui-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+.day-detail-section-title {
+  letter-spacing: 0.035em;
+}
+
+@media (max-width: 767px) {
+  #modal.day-detail-modal {
+    align-items: flex-end;
+    padding: max(0.75rem, env(safe-area-inset-top)) 0 0;
+  }
+  #modal.day-detail-modal #modal-content {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    max-height: 86dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 1.35rem 1.35rem 0 0;
+    box-shadow: 0 -18px 45px rgba(2, 6, 23, 0.42);
+  }
+  #modal.day-detail-modal #modal-content::before {
+    position: absolute;
+    top: 0.45rem;
+    left: 50%;
+    width: 2.7rem;
+    height: 0.24rem;
+    border-radius: 999px;
+    background: rgba(203, 213, 225, 0.4);
+    content: "";
+    transform: translateX(-50%);
+  }
+  #modal.day-detail-modal #modal-content > header,
+  #modal.day-detail-modal #modal-content > div:first-of-type {
+    padding-top: 1.05rem;
+  }
+}
+
 /* === CALENDÁRIO === */
 .calendar-day {
   position: relative;
   overflow: hidden;
+}
+.calendar-swipe-viewport {
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+}
+.calendar-track {
+  display: flex;
+  width: 300%;
+  backface-visibility: hidden;
+  contain: layout paint style;
+  transform: translateZ(0);
+  will-change: transform;
+}
+.calendar-page {
+  flex: 0 0 33.333333%;
+  width: 33.333333%;
+  min-width: 0;
+}
+.calendar-page:not(.is-current) {
+  pointer-events: none;
+  user-select: none;
+}
+.calendar-grid {
+  min-width: 0;
+}
+/* No grid, só chuva e relâmpagos permanecem animados para preservar FPS. */
+.calendar-grid .wx-icon.spin-slow .wx-sun,
+.calendar-grid .wx-icon .wx-rain,
+.calendar-grid .wx-icon .wx-bolt,
+.calendar-grid .wx-icon .wx-snow,
+.calendar-grid .wx-icon .wx-fog,
+.calendar-grid .blood-moon-icon,
+.calendar-grid .blood-moon-icon *,
+.calendar-page:not(.is-current) .wx-icon .wx-rain,
+.calendar-page:not(.is-current) .wx-icon .wx-bolt,
+.calendar-day--adjacent .wx-icon .wx-rain,
+.calendar-day--adjacent .wx-icon .wx-bolt {
+  animation: none !important;
+}
+.calendar-page.is-current
+  .calendar-day:is(.today, :hover, :focus-visible, :active)
+  .wx-rain.r1 {
+  animation: rainDrop 1.1s linear infinite !important;
+}
+.calendar-page.is-current
+  .calendar-day:is(.today, :hover, :focus-visible, :active)
+  .wx-rain.r2 {
+  animation: rainDrop 1.1s linear 0.4s infinite !important;
+}
+.calendar-page.is-current
+  .calendar-day:is(.today, :hover, :focus-visible, :active)
+  .wx-rain.r3 {
+  animation: rainDrop 1.1s linear 0.8s infinite !important;
+}
+.calendar-page.is-current
+  .calendar-day:is(.today, :hover, :focus-visible, :active)
+  .wx-bolt {
+  animation: boltFlash 2.5s ease-in-out infinite !important;
 }
 .calendar-toolbar {
   display: grid;
@@ -682,10 +873,12 @@ body.fx-bloodmoon #weather-bg {
 }
 .calendar-elven-date {
   display: grid;
-  width: calc(100% + 0.75rem);
-  max-width: none;
-  margin: 1px -0.375rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 1px 0;
   justify-items: center;
+  overflow: hidden;
   color: rgba(251, 191, 36, 0.8);
   font-family: "Cinzel", serif;
   font-size: 0.5rem;
@@ -694,12 +887,19 @@ body.fx-bloodmoon #weather-bg {
 }
 .calendar-savaed {
   display: block;
+  width: 100%;
   max-width: 100%;
+  overflow: hidden;
+  letter-spacing: -0.025em;
+  text-align: center;
+  text-overflow: clip;
   white-space: nowrap;
 }
 .calendar-savaed--long {
-  font-size: clamp(0.34rem, 1.55vw, 0.48rem);
-  letter-spacing: -0.035em;
+  font-size: clamp(0.29rem, 1.25vw, 0.44rem);
+  letter-spacing: -0.055em;
+  transform: scaleX(0.82);
+  transform-origin: center;
 }
 .season-icon {
   display: inline-block;
@@ -735,6 +935,15 @@ body.fx-bloodmoon #weather-bg {
 .calendar-day.past {
   opacity: 0.5;
   background-color: #1f2937;
+}
+.calendar-day--adjacent,
+.calendar-day--adjacent.past {
+  opacity: 0.34;
+  background-color: rgba(15, 23, 42, 0.72);
+}
+.calendar-day--adjacent:hover,
+.calendar-day--adjacent:focus-visible {
+  opacity: 0.62;
 }
 
 /* === SCROLLBAR === */
@@ -1345,12 +1554,13 @@ select option {
 
 @media (max-width: 374px) {
   .calendar-elven-date {
-    width: calc(100% + 0.5rem);
-    margin-inline: -0.25rem;
+    width: 100%;
+    margin-inline: 0;
   }
   .calendar-savaed--long {
-    font-size: clamp(0.28rem, 1.4vw, 0.42rem);
-    letter-spacing: -0.04em;
+    font-size: clamp(0.26rem, 1.18vw, 0.38rem);
+    letter-spacing: -0.06em;
+    transform: scaleX(0.76);
   }
 }
 
@@ -1470,23 +1680,23 @@ button.event-pill[class*="event-type-"]:hover {
 }
 /* Ajustes de proporção restritos ao desktop; o grid mobile mantém suas medidas. */
 @media (min-width: 1024px) {
-  #calendar-grid > * {
+  .calendar-grid > * {
     height: 9rem;
   }
-  #calendar-grid .calendar-day {
+  .calendar-grid .calendar-day {
     padding: 0.65rem;
   }
-  #calendar-grid .calendar-day-content {
+  .calendar-grid .calendar-day-content {
     justify-content: center;
     gap: 0.15rem;
     padding-block: 1.15rem 0.6rem;
     margin-top: 0;
   }
-  #calendar-grid .calendar-weather-icon {
+  .calendar-grid .calendar-weather-icon {
     width: 1.8rem;
     height: 1.8rem;
   }
-  #calendar-grid .calendar-elven-date {
+  .calendar-grid .calendar-elven-date {
     line-height: 1.25;
   }
   .calendar-toolbar {
@@ -1494,7 +1704,7 @@ button.event-pill[class*="event-type-"]:hover {
   }
 }
 @media (max-width: 767px) {
-  #calendar-grid {
+  .calendar-swipe-viewport {
     touch-action: pan-y pinch-zoom;
   }
 }

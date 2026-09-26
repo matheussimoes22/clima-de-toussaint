@@ -1,34 +1,53 @@
 import assert from "node:assert/strict";
 import { bindCalendarSwipe } from "../assets/js/navigation/calendar-swipe.js";
 
-const original = globalThis.matchMedia;
+const originalMatchMedia = globalThis.matchMedia;
 let mobile = true;
-globalThis.matchMedia = () => ({ matches: mobile });
-const handlers = {};
-const changes = [];
-bindCalendarSwipe(
-  {
-    clientWidth: 360,
-    addEventListener: (name, handler) => {
-      handlers[name] = handler;
-    },
-  },
-  (delta) => changes.push(delta),
-);
+let reducedMotion = true;
+globalThis.matchMedia = (query) => ({
+  matches: query.includes("max-width") ? mobile : reducedMotion,
+});
+
 const point = (x, y) => ({ clientX: x, clientY: y });
-let prevented = false;
-const begin = (x, y) => handlers.touchstart({ touches: [point(x, y)] });
-const end = (x, y) =>
-  handlers.touchend({
-    changedTouches: [point(x, y)],
-    preventDefault: () => {
-      prevented = true;
-    },
-  });
-begin(250, 100);
-end(90, 105);
+const handlers = {};
+const track = { style: {} };
+const changes = [];
+const viewport = {
+  clientWidth: 360,
+  addEventListener(name, handler) {
+    handlers[name] = handler;
+  },
+};
+
+const controller = bindCalendarSwipe(viewport, track, (delta) =>
+  changes.push(delta),
+);
+assert.match(track.style.transform, /translate3d\(-360px/);
+
+handlers.touchstart({ touches: [point(280, 100)] });
+let movePrevented = false;
+handlers.touchmove({
+  touches: [point(150, 104)],
+  preventDefault() {
+    movePrevented = true;
+  },
+});
+assert.ok(movePrevented, "o arraste horizontal deve assumir o gesto");
+assert.match(
+  track.style.transform,
+  /-490px/,
+  "o trilho deve acompanhar o dedo e revelar o mes seguinte",
+);
+let endPrevented = false;
+handlers.touchend({
+  changedTouches: [point(130, 104)],
+  preventDefault() {
+    endPrevented = true;
+  },
+});
 assert.deepEqual(changes, [1]);
-assert.ok(prevented);
+assert.ok(endPrevented);
+
 let blockedClick = false;
 handlers.click({
   preventDefault() {},
@@ -36,98 +55,107 @@ handlers.click({
     blockedClick = true;
   },
 });
-assert.ok(blockedClick);
-begin(90, 100);
-end(250, 105);
+assert.ok(blockedClick, "o toque que navegou nao pode abrir um dia");
+
+handlers.touchstart({ touches: [point(90, 100)] });
+handlers.touchend({
+  changedTouches: [point(260, 105)],
+  preventDefault() {},
+});
 assert.deepEqual(changes, [1, -1]);
-begin(250, 100);
-handlers.touchmove({ touches: [point(240, 140)] });
-end(90, 145);
+
+handlers.touchstart({ touches: [point(260, 100)] });
+handlers.touchmove({
+  touches: [point(250, 150)],
+  preventDefault() {
+    throw new Error("rolagem vertical nao deve ser bloqueada");
+  },
+});
+handlers.touchend({
+  changedTouches: [point(80, 150)],
+  preventDefault() {},
+});
 assert.equal(changes.length, 2);
-begin(250, 100);
-handlers.touchcancel();
-end(90, 100);
-assert.equal(changes.length, 2);
-begin(250, 100);
-handlers.touchmove({ touches: [point(200, 100), point(100, 100)] });
-end(90, 100);
-assert.equal(changes.length, 2);
+assert.match(track.style.transform, /translate3d\(-360px/);
+
+handlers.touchstart({ touches: [point(260, 100)] });
+handlers.touchmove({
+  touches: [point(200, 100), point(100, 100)],
+  preventDefault() {},
+});
+assert.match(track.style.transform, /translate3d\(-360px/);
+
 mobile = false;
-begin(250, 100);
-end(90, 100);
+handlers.touchstart({ touches: [point(260, 100)] });
+handlers.touchend({
+  changedTouches: [point(80, 100)],
+  preventDefault() {},
+});
 assert.equal(changes.length, 2);
-globalThis.matchMedia = original;
-console.log(
-  "Gesto do calendário: direção, cancelamento, multitouch e clique passaram.",
+
+mobile = true;
+controller.moveTo(1);
+assert.deepEqual(changes, [1, -1, 1]);
+let blockedAfterToolbar = false;
+handlers.click({
+  preventDefault() {},
+  stopImmediatePropagation() {
+    blockedAfterToolbar = true;
+  },
+});
+assert.equal(
+  blockedAfterToolbar,
+  false,
+  "navegar pelos botoes nao pode bloquear o proximo card",
 );
 
-// O mês muda após a saída; a entrada anima o novo grid.
-const originalDocument = globalThis.document;
+// Com movimento normal, a troca acontece somente após o trilho chegar à lateral.
+reducedMotion = false;
 const animatedHandlers = {};
-const style = {};
-let finishExit;
-let entries = 0;
-let monthChanges = 0;
-globalThis.matchMedia = (query) => ({ matches: query.includes("max-width") });
-globalThis.document = {
-  getElementById: () => ({
-    animate() {
-      entries++;
-    },
-  }),
-};
-const grid = {
-  style,
-  clientWidth: 390,
-  isConnected: true,
-  addEventListener(name, handler) {
-    animatedHandlers[name] = handler;
-  },
-  animate() {
+const animatedTrack = {
+  style: {},
+  frames: null,
+  animate(frames) {
+    this.frames = frames;
     return {
       finished: new Promise((resolve) => {
-        finishExit = resolve;
+        this.finish = resolve;
       }),
     };
   },
 };
-bindCalendarSwipe(grid, () => {
-  monthChanges++;
+let animatedChanges = 0;
+const animatedViewport = {
+  clientWidth: 390,
+  addEventListener(name, handler) {
+    animatedHandlers[name] = handler;
+  },
+};
+bindCalendarSwipe(animatedViewport, animatedTrack, () => {
+  animatedChanges++;
 });
 animatedHandlers.touchstart({ touches: [point(280, 100)] });
-animatedHandlers.touchmove({ touches: [point(140, 105)] });
-assert.match(style.transform, /translateX\(-/);
-animatedHandlers.touchend({
-  changedTouches: [point(130, 105)],
+animatedHandlers.touchmove({
+  touches: [point(130, 105)],
   preventDefault() {},
 });
+assert.match(animatedTrack.style.transform, /-540px/);
+animatedHandlers.touchend({
+  changedTouches: [point(120, 105)],
+  preventDefault() {},
+});
+assert.equal(animatedChanges, 0);
 assert.equal(
-  monthChanges,
-  0,
-  "Nao pode trocar o mes antes da animacao de saida",
+  "opacity" in animatedTrack.frames[0],
+  false,
+  "o mes nao deve sumir durante a transicao",
 );
-finishExit();
+assert.match(animatedTrack.frames[1].transform, /-780px/);
+animatedTrack.finish();
 await Promise.resolve();
-assert.equal(monthChanges, 1);
-assert.equal(entries, 1);
-// Cancelamento por multitouch restaura a posicao sem navegar.
-const cancelledHandlers = {};
-bindCalendarSwipe(
-  {
-    style,
-    clientWidth: 390,
-    addEventListener(n, h) {
-      cancelledHandlers[n] = h;
-    },
-  },
-  () => {
-    throw new Error("Navegacao indevida");
-  },
+assert.equal(animatedChanges, 1);
+
+globalThis.matchMedia = originalMatchMedia;
+console.log(
+  "Calendario: mes vizinho acompanha o dedo, cancelamentos e troca animada passaram.",
 );
-cancelledHandlers.touchstart({ touches: [point(280, 100)] });
-cancelledHandlers.touchmove({ touches: [point(140, 105)] });
-cancelledHandlers.touchmove({ touches: [point(130, 105), point(150, 120)] });
-assert.equal(style.transform, "");
-globalThis.matchMedia = original;
-globalThis.document = originalDocument;
-console.log("Arraste, sequencia de animacoes e cancelamento visual: passaram.");
