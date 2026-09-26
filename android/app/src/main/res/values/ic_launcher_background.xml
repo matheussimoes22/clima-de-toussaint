@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#111315</color>
+    <!-- Carvão profundo valoriza o dourado e remete ao estandarte de Toussaint. -->
+    <color name="ic_launcher_background">#070B10</color>
+    <!-- A abertura permanece integrada à paleta azul-ardósia da interface. -->
+    <color name="splash_background">#0F172A</color>
 </resources>

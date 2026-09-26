@@ -14,12 +14,20 @@ export function viewUrl(view, locationLike = window.location) {
 }
 
 /** Cria o estado mínimo mantido em cada entrada do histórico. */
-export function createHistoryState(view, layer = null) {
+export function createHistoryState(view, layer = null, depth = 0) {
   return {
     appId: APP_HISTORY_ID,
     view: VALID_VIEWS.has(view) ? view : "today",
     layer,
+    depth: Number.isInteger(depth) && depth > 0 ? depth : 0,
   };
+}
+
+/** Quantidade de entradas internas anteriores, sem contar o histórico do WebView. */
+export function getHistoryDepth(state = history.state) {
+  return state?.appId === APP_HISTORY_ID && Number.isInteger(state.depth)
+    ? Math.max(0, state.depth)
+    : 0;
 }
 
 /** Obtém uma tela válida a partir do hash, com fallback para a preferência salva. */
@@ -31,8 +39,9 @@ export function getInitialView(savedView, hash = window.location.hash) {
 
 /** Registra uma navegação do usuário sem duplicar a tela atual. */
 export function pushView(view, previousView) {
-  const state = createHistoryState(view);
   const shouldReplace = history.state?.layer || previousView === view;
+  const depth = getHistoryDepth() + (shouldReplace ? 0 : 1);
+  const state = createHistoryState(view, null, depth);
   history[shouldReplace ? "replaceState" : "pushState"](
     state,
     "",
@@ -49,7 +58,8 @@ export function pushLayer(view, layer) {
     return;
   }
   const method = history.state?.layer ? "replaceState" : "pushState";
-  history[method](createHistoryState(view, layer), "", viewUrl(view));
+  const depth = getHistoryDepth() + (method === "pushState" ? 1 : 0);
+  history[method](createHistoryState(view, layer, depth), "", viewUrl(view));
 }
 
 /** Retorna uma entrada interna para o estado normal da tela atual. */
