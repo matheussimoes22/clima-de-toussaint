@@ -12,9 +12,9 @@
   "categories": ["weather", "entertainment"],
   "icons": [
     {
-      "src": "assets/icons/app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/icons/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     { "src": "favicon.ico", "sizes": "48x48", "type": "image/x-icon" }

@@ -1,5 +1,5 @@
 /* Service Worker - Clima de Toussaint */
-const CACHE = "toussaint-v10-thermal-cycle";
+const CACHE = "toussaint-v11-android-identity";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./manifest.webmanifest",
   "./assets/css/tailwind.css",
   "./assets/css/styles.css",
-  "./assets/icons/app-icon.svg",
+  "./assets/icons/app-icon.png",
   "./assets/js/main.js",
   "./assets/js/app/app-controller.js",
   "./assets/js/data/world-data.js",

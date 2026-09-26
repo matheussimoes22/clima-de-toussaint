@@ -38,7 +38,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  if ("serviceWorker" in navigator) {
+  const isNativeApp = window.Capacitor?.isNativePlatform?.() === true;
+  if (!isNativeApp && "serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(() => {
       // O aplicativo continua funcional online mesmo se o cache offline falhar.
     });

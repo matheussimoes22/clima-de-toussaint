@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Clima de Toussaint</string>
+    <string name="title_activity_main">Clima de Toussaint</string>
+    <string name="package_name">com.matheussimoes22.climadetoussaint</string>
+    <string name="custom_url_scheme">com.matheussimoes22.climadetoussaint</string>
+</resources>
