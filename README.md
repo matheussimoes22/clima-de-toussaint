@@ -52,6 +52,8 @@ Aplicação climática fictícia e determinística para o ducado de Toussaint, i
 │   ├── dev-server.mjs          # Servidor local
 │   └── build.mjs               # Geração de dist
 ├── tests/                      # Testes automatizados
+├── android/                    # Projeto nativo gerenciado pelo Android Studio
+├── capacitor.config.json       # Identidade do app e saída web compartilhada
 ├── .gitignore
 ├── .prettierignore
 ├── package.json
@@ -105,6 +107,21 @@ npm run build      # gera a pasta dist para publicação
 ```
 
 O `tailwind.css` compilado é versionado. Assim, Netlify e GitHub Pages podem publicar a pasta diretamente sem executar `npm install` ou uma etapa de build.
+
+## Android com Capacitor
+
+O aplicativo Android usa o mesmo código-fonte da versão web. O Capacitor copia a saída `dist` para o projeto nativo; portanto, alterações em HTML, CSS ou JavaScript continuam sendo feitas uma única vez.
+
+Requisitos locais: Node.js 22 ou superior, Android Studio, JDK 21 e Android SDK API 24 ou superior. Para atualizar o projeto Android após uma mudança na versão web:
+
+```bash
+npm run android:sync  # gera o build web e sincroniza o projeto Android
+npm run android:open  # sincroniza e abre o projeto no Android Studio
+```
+
+No Android Studio, configure o **Gradle JDK** como JDK 21, selecione o emulador ou aparelho e use **Run**. Para gerar um APK instalável de desenvolvimento, use **Build > Build APK(s)**; o resultado fica em `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+O identificador é `com.matheussimoes22.climadetoussaint`. A primeira compilação Android usa `versionName 2.0.0` e `versionCode 1`. O ícone e a abertura usam o emblema provisório do cavaleiro de Toussaint. A publicação no Google Play não faz parte desta etapa.
 
 ## Persistência
 
