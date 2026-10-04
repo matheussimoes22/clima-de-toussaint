@@ -56,6 +56,11 @@ export const CalendarView = {
         let classes =
           "calendar-day p-2 h-24 md:h-32 bg-slate-800 hover:bg-slate-700 cursor-pointer transition-colors";
         if (isAdjacentMonth) classes += " calendar-day--adjacent";
+        if (
+          date.getMonth() === this.state.currentDate.getMonth() &&
+          date.getFullYear() === this.state.currentDate.getFullYear()
+        )
+          classes += " calendar-day--live";
         if (isToday) classes += " today";
         if (isPast) classes += " past";
         if (weather.moon.isBloodMoon) classes += " blood-moon-day";
@@ -118,6 +123,7 @@ export const CalendarView = {
   },
 
   renderCalendar() {
+    this._calendarSwipe?.destroy();
     const self = this;
     const { calendarMonth, calendarYear } = this.state;
     const monthDate = new Date(calendarYear, calendarMonth, 1);
@@ -161,6 +167,7 @@ export const CalendarView = {
     document
       .getElementById("prev-month")
       .addEventListener("click", () => swipe.moveTo(-1));
+    this._calendarSwipe = swipe;
     document
       .getElementById("next-month")
       .addEventListener("click", () => swipe.moveTo(1));

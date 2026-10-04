@@ -1,5 +1,5 @@
 /* Service Worker - Clima de Toussaint */
-const CACHE = "toussaint-v13-calendar-motion";
+const CACHE = "toussaint-v2.0.1";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,9 @@ const ASSETS = [
   "./assets/css/styles.css",
   "./assets/icons/app-icon.png",
   "./assets/js/main.js",
+  "./assets/js/version.js",
+  "./assets/icons/favicon.svg",
+  "./assets/icons/splash-knight.png",
   "./assets/js/app/app-controller.js",
   "./assets/js/data/world-data.js",
   "./assets/js/engine/weather-engine.js",

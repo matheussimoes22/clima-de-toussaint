@@ -20,6 +20,8 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
   let gestureWidth = 0;
   let pendingOffset = null;
   let animationFrame = 0;
+  let disposed = false;
+  let monthAnimation = null;
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   const width = () => Math.max(1, gestureWidth || viewport.clientWidth || 1);
   const center = () => -width();
@@ -60,10 +62,11 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
   };
   const finishMonthChange = (delta) => {
     moving = false;
+    if (disposed || viewport.isConnected === false) return;
     changeMonth(delta);
   };
   const moveTo = (delta, suppressFollowingClick = false) => {
-    if (!delta || moving) return;
+    if (!delta || moving || disposed) return;
     flushTrackPosition();
     gestureWidth = viewport.clientWidth || gestureWidth;
     suppressClick = suppressFollowingClick;
@@ -79,15 +82,28 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
       easing: "cubic-bezier(.2,.8,.2,1)",
       fill: "forwards",
     });
+    monthAnimation = animation;
     animation.finished
       .then(() => finishMonthChange(delta))
       .catch(() => {
+        if (disposed) return;
         moving = false;
         settle();
       });
   };
 
   setTrackPosition(0);
+  const resizeObserver =
+    typeof ResizeObserver === "function"
+      ? new ResizeObserver(() => {
+          if (disposed || moving) return;
+          start = null;
+          gestureWidth = viewport.clientWidth;
+          pendingOffset = null;
+          setTrackPosition(0);
+        })
+      : null;
+  resizeObserver?.observe(viewport);
   viewport.addEventListener(
     "touchstart",
     (event) => {
@@ -168,5 +184,13 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
     },
     true,
   );
-  return { moveTo: (delta) => moveTo(delta, false) };
+  return {
+    moveTo: (delta) => moveTo(delta, false),
+    destroy() {
+      disposed = true;
+      resizeObserver?.disconnect();
+      monthAnimation?.cancel();
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    },
+  };
 }

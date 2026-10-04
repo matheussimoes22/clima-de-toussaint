@@ -69,6 +69,24 @@ export function loadRecords(storage = localStorage) {
       },
       lastEvaluatedDate: saved?.lastEvaluatedDate || null,
     };
+    const record = byLocation[locationKey];
+    record.initialReferences = saved?.initialReferences || {};
+    for (const kind of ["max", "min"]) {
+      const entry = record[kind];
+      if (saved?.[kind]?.source === "uninitialized") entry.value = null;
+      // Valores fixos de instalação não são medições. Conserva a referência
+      // para auditoria e inicia a coleta real sem apagar recordes importados.
+      if (
+        !entry.date &&
+        entry.source === "legacy-baseline" &&
+        entry.value === fallback[kind].value &&
+        !Number.isFinite(old?.[kind])
+      ) {
+        record.initialReferences[kind] = { ...entry };
+        record[kind] = { value: null, date: null, source: "uninitialized" };
+        record.lastEvaluatedDate = null;
+      }
+    }
   }
 
   return {
@@ -90,11 +108,17 @@ export function updateLocationRecord(records, locationKey, weather, dateKey) {
   }
 
   let changed = false;
-  if (weather.tempMax > record.max.value) {
+  if (
+    !Number.isFinite(record.max.value) ||
+    weather.tempMax > record.max.value
+  ) {
     record.max = { value: weather.tempMax, date: dateKey, source: "generated" };
     changed = true;
   }
-  if (weather.tempMin < record.min.value) {
+  if (
+    !Number.isFinite(record.min.value) ||
+    weather.tempMin < record.min.value
+  ) {
     record.min = { value: weather.tempMin, date: dateKey, source: "generated" };
     changed = true;
   }
@@ -111,11 +135,11 @@ export function observeTemperature(records, locationKey, temperature, dateKey) {
   if (!record || !Number.isFinite(temperature)) return false;
 
   let changed = false;
-  if (temperature > record.max.value) {
+  if (!Number.isFinite(record.max.value) || temperature > record.max.value) {
     record.max = { value: temperature, date: dateKey, source: "observed" };
     changed = true;
   }
-  if (temperature < record.min.value) {
+  if (!Number.isFinite(record.min.value) || temperature < record.min.value) {
     record.min = { value: temperature, date: dateKey, source: "observed" };
     changed = true;
   }

@@ -26,10 +26,13 @@ export const MoonView = {
     let date = new Date(today);
     const findNextPhase = (targetIndex) => {
       let testDate = new Date(date);
+      let leftCurrentPhase =
+        WeatherEngine.getLunarPhase(testDate).index !== targetIndex;
       while (true) {
         testDate.setDate(testDate.getDate() + 1);
         const phaseIndex = WeatherEngine.getLunarPhase(testDate).index;
-        if (phaseIndex === targetIndex) return testDate;
+        if (phaseIndex !== targetIndex) leftCurrentPhase = true;
+        if (leftCurrentPhase && phaseIndex === targetIndex) return testDate;
       }
     };
     const nextNewMoonDate = findNextPhase(0);

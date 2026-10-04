@@ -41,6 +41,7 @@ export const MonthlyView = {
   },
 
   renderMonthly() {
+    this.refreshAllLocationRecords(this.state.currentDate);
     const startDate = new Date(this.state.currentDate);
     const locData = LOCATIONS[this.state.currentLocation];
     const record = this.getRecord(this.state.currentLocation);

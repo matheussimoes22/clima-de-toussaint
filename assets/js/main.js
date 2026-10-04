@@ -3,9 +3,21 @@
  * Inicializa a interface somente após o documento estar pronto e ativa o modo offline.
  */
 
+import { APP_VERSION } from "./version.js";
+
 document.addEventListener("DOMContentLoaded", async () => {
   const isNativeApp = window.Capacitor?.isNativePlatform?.() === true;
   document.documentElement.classList.toggle("native-app", isNativeApp);
+  for (const host of [
+    document.getElementById("mobile-settings-panel"),
+    document.getElementById("elf-status")?.parentElement,
+  ]) {
+    if (!host) continue;
+    const label = document.createElement("p");
+    label.className = "app-version";
+    label.textContent = `${isNativeApp ? "Android" : "Web"} · v${APP_VERSION}`;
+    host.append(label);
+  }
 
   if (isNativeApp) {
     // Um retorno curto confirma o toque sem fazer o ícone saltar ou distrair.

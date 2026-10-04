@@ -1,6 +1,8 @@
 # Clima de Toussaint
 
-**[Abrir interface web](https://weathertoussaint.netlify.app/clima-de-toussaint.html)** · **[Baixar aplicativo Android](https://github.com/matheussimoes22/clima-de-toussaint/releases/latest/download/clima-de-toussaint-android-v2.0.0.apk)** · **[Código no GitHub](https://github.com/matheussimoes22/clima-de-toussaint)**
+**[Abrir interface web](https://weathertoussaint.netlify.app/clima-de-toussaint.html)** · **[Baixar aplicativo Android](https://github.com/matheussimoes22/clima-de-toussaint/releases/latest/download/clima-de-toussaint-android.apk)** · **[Código no GitHub](https://github.com/matheussimoes22/clima-de-toussaint)**
+
+Versão atual: **2.0.1** (Android `versionCode 2`). Consulte as [notas do patch](PATCH-2.0.1.md). O APK é um build de desenvolvimento para testes, assinado com a mesma chave da versão anterior.
 
 Aplicação climática fictícia e determinística para o ducado de Toussaint, inspirado em _The Witcher 3: Blood and Wine_. O objetivo não é reproduzir uma cidade real nem consumir uma API meteorológica: o aplicativo cria uma série canônica própria, usando relações e unidades plausíveis para sustentar o roleplay.
 

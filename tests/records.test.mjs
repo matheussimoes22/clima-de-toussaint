@@ -29,6 +29,14 @@ const recovered = loadRecords(createStorage({ [RECORDS_KEY]: "{inválido" }));
 assert.ok(recovered.byLocation.beauclair);
 
 const records = loadRecords(createStorage());
+assert.equal(records.byLocation.beauclair.max.value, null);
+assert.equal(records.byLocation.beauclair.initialReferences.max.value, 37);
+const fresh = loadRecords(createStorage());
+observeTemperature(fresh, "beauclair", 23, "2026-10-04");
+assert.equal(fresh.byLocation.beauclair.max.value, 23);
+const freshStorage = createStorage();
+saveRecords(fresh, freshStorage);
+assert.equal(loadRecords(freshStorage).byLocation.beauclair.max.value, 23);
 const coronataBefore = structuredClone(records.byLocation.coronata);
 assert.equal(
   updateLocationRecord(

@@ -229,6 +229,8 @@ export const App = {
         self.dateKey(self.state.currentDate) !== previousDay
       ) {
         self.checkAlerts();
+        self.refreshAllLocationRecords(self.state.currentDate);
+        if (self.state.currentView === "monthly") self.renderMonthly();
         if (self.state.currentView === "today") self.renderToday();
         self.applyWeatherFx(
           WeatherEngine.getCurrentWeather(
@@ -244,6 +246,8 @@ export const App = {
         if (recordsChanged && self.state.currentView === "monthly") {
           self.renderMonthly();
         }
+        if (self.state.currentView === "calendar") self.renderCalendar();
+        if (self.state.currentView === "moon") self.renderMoon();
       }
       if (self.state.currentView === "today") {
         const clockEl = document.getElementById("real-time-clock");
@@ -322,6 +326,7 @@ export const App = {
   navigate(view, { historyMode = "push" } = {}) {
     if (!["today", "calendar", "monthly", "moon"].includes(view)) return;
     const previousView = this.state.currentView;
+    this._calendarSwipe?.destroy();
     this.setModalOpen(false, { restoreFocus: false });
     this.setSettingsOpen(false);
     this.state.currentView = view;
@@ -513,6 +518,11 @@ export const App = {
       !this.elements.modalContent?.animate
     )
       return Promise.resolve();
+    // Captura o quadro visível antes de cancelar a abertura interrompida.
+    const visibleStyle = getComputedStyle(this.elements.modalContent);
+    const fromTransform = visibleStyle.transform;
+    const fromOpacity = visibleStyle.opacity;
+    this._modalAnimation?.cancel();
     const source = sourceElement.getBoundingClientRect();
     const target = this.elements.modalContent.getBoundingClientRect();
     const translateX =
@@ -523,7 +533,7 @@ export const App = {
     const scaleY = Math.max(0.08, source.height / target.height);
     this._modalCloseAnimation = this.elements.modalContent.animate(
       [
-        { transform: "translate(0, 0) scale(1)", opacity: 1 },
+        { transform: fromTransform, opacity: fromOpacity },
         {
           transform: `translate(${translateX * 0.84}px, ${translateY * 0.84}px) scale(${Math.max(0.08, scaleX * 1.16)}, ${Math.max(0.08, scaleY * 1.16)})`,
           opacity: 0.9,
@@ -610,13 +620,17 @@ export const App = {
 
       // No dia atual registra apenas a temperatura que já aconteceu.
       const current = WeatherEngine.getCurrentWeather(date, locationKey);
-      changed =
-        observeTemperature(
-          this.state.records,
-          locationKey,
-          current.currentTemp,
-          this.dateKey(today),
-        ) || changed;
+      // Recupera também as horas já transcorridas enquanto o app estava fechado.
+      for (const hour of current.hourly) {
+        if (Number.parseInt(hour.hour, 10) > date.getHours()) continue;
+        changed =
+          observeTemperature(
+            this.state.records,
+            locationKey,
+            hour.temp,
+            this.dateKey(today),
+          ) || changed;
+      }
     }
     if (changed) saveRecords(this.state.records);
     return changed;
@@ -985,6 +999,11 @@ export const App = {
 
   /** Alterna o diálogo visualmente; o histórico é controlado pelos métodos públicos. */
   setModalOpen(isOpen, { restoreFocus = true } = {}) {
+    if (isOpen) {
+      clearTimeout(this._modalCloseCleanup);
+      this._modalCloseAnimation?.cancel();
+      this._modalCloseAnimation = null;
+    }
     this.elements.modal.classList.toggle("open", isOpen);
     this.elements.modal.setAttribute("aria-hidden", String(!isOpen));
     this.elements.modal.inert = !isOpen;
