@@ -254,6 +254,8 @@ export const EventBulletinView = {
 
                         <footer class="news-footer">${L.issued} ${NEWS_SOURCES[lang]}</footer>
                     </article>`;
-    this.openModal();
+    this.openModal({
+      detail: { kind: "event", eventKey, date: isoDate, daysAhead },
+    });
   },
 };

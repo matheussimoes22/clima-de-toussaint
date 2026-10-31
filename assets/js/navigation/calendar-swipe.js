@@ -63,6 +63,8 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
   const finishMonthChange = (delta) => {
     moving = false;
     if (disposed || viewport.isConnected === false) return;
+    viewport.inert = false;
+    viewport.removeAttribute?.("aria-busy");
     changeMonth(delta);
   };
   const moveTo = (delta, suppressFollowingClick = false) => {
@@ -75,6 +77,9 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
       return;
     }
     moving = true;
+    // Nenhum dia do mês que está saindo pode receber um toque intermediário.
+    viewport.inert = true;
+    viewport.setAttribute?.("aria-busy", "true");
     const from = track.style.transform || `translate3d(${center()}px, 0, 0)`;
     const to = `translate3d(${center() - delta * width()}px, 0, 0)`;
     const animation = track.animate([{ transform: from }, { transform: to }], {
@@ -88,6 +93,8 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
       .catch(() => {
         if (disposed) return;
         moving = false;
+        viewport.inert = false;
+        viewport.removeAttribute?.("aria-busy");
         settle();
       });
   };
@@ -127,6 +134,7 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
   viewport.addEventListener(
     "touchmove",
     (event) => {
+      if (moving || disposed) return;
       if (!start || event.touches.length !== 1) {
         settle();
         start = null;
@@ -176,7 +184,7 @@ export function bindCalendarSwipe(viewport, track, changeMonth) {
   viewport.addEventListener(
     "click",
     (event) => {
-      if (suppressClick) {
+      if (moving || disposed || suppressClick) {
         event.preventDefault();
         event.stopImmediatePropagation();
         suppressClick = false;

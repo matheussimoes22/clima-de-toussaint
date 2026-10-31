@@ -47,8 +47,11 @@ export const TodayView = {
       : tSeasonName(weather.seasonKey, { name: weather.seasonName });
 
     // Lógica Visual Lua de Sangue (Apenas 00-03h)
-    const isBloodMoonActive =
-      weather.moon.isBloodMoon && currentHour >= 0 && currentHour <= 3;
+    const isBloodMoonActive = isBloodMoonVisible(
+      weather.conditionKey,
+      currentHour,
+      weather.moon.isBloodMoon,
+    );
 
     // Definir ícone principal com base na atividade
     let mainMoonIcon = weather.moon.icon;
@@ -77,7 +80,7 @@ export const TodayView = {
     for (const [key, val] of Object.entries(LOCATIONS))
       locationOptions += `<option value="${key}" ${this.state.currentLocation === key ? "selected" : ""}>${tLocationName(key)}</option>`;
 
-    let hourlyHtml = `<div class="mt-6"><h3 class="font-cinzel text-xl text-amber-400 mb-4">${t("Previsão 24h")}</h3><div id="hourly-forecast-container" class="flex overflow-x-auto space-x-3 pb-4">`;
+    let hourlyHtml = `<div class="mt-6"><h3 class="font-cinzel text-xl text-amber-400 mb-4">${t("Previsão horária de hoje")}</h3><div id="hourly-forecast-container" class="flex overflow-x-auto space-x-3 pb-4">`;
     hourly.forEach((h) => {
       const hourOfForecast = parseInt(h.hour.split(":")[0]);
       const isCurrentHour = hourOfForecast === currentHour;

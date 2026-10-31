@@ -11,6 +11,7 @@ const LEGACY_RECORDS_KEY = "toussaintApp_records";
 /** Lê JSON do armazenamento sem impedir o app de iniciar se o valor estiver corrompido. */
 function readJson(storage, key) {
   try {
+    storage ??= globalThis.localStorage;
     const raw = storage.getItem(key);
     return raw ? JSON.parse(raw) : null;
   } catch {
@@ -37,7 +38,7 @@ export function createDefaultRecord(locationKey) {
 }
 
 /** Normaliza a versão atual e migra silenciosamente o formato legado {max, min}. */
-export function loadRecords(storage = localStorage) {
+export function loadRecords(storage) {
   const current = readJson(storage, RECORDS_KEY);
   const legacy = readJson(storage, LEGACY_RECORDS_KEY) || {};
   const byLocation = {};
@@ -160,8 +161,9 @@ export function localDateFromKey(dateKey) {
 }
 
 /** Grava uma fotografia completa e versionada dos recordes. */
-export function saveRecords(records, storage = localStorage) {
+export function saveRecords(records, storage) {
   try {
+    storage ??= globalThis.localStorage;
     records.updatedAt = new Date().toISOString();
     storage.setItem(RECORDS_KEY, JSON.stringify(records));
     return true;

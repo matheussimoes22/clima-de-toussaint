@@ -1,5 +1,5 @@
 /* Service Worker - Clima de Toussaint */
-const CACHE = "toussaint-v2.0.1";
+const CACHE = "toussaint-v2.0.2";
 const ASSETS = [
   "./",
   "./index.html",

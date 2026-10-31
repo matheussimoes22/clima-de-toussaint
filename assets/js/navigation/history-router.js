@@ -50,7 +50,7 @@ export function pushView(view, previousView) {
 }
 
 /** Adiciona modal ou ajustes como camada temporária fechável pelo botão Voltar. */
-export function pushLayer(view, layer) {
+export function pushLayer(view, layer, detail = null) {
   if (
     history.state?.appId === APP_HISTORY_ID &&
     history.state.layer === layer
@@ -59,7 +59,9 @@ export function pushLayer(view, layer) {
   }
   const method = history.state?.layer ? "replaceState" : "pushState";
   const depth = getHistoryDepth() + (method === "pushState" ? 1 : 0);
-  history[method](createHistoryState(view, layer, depth), "", viewUrl(view));
+  const state = createHistoryState(view, layer, depth);
+  if (detail) state.detail = detail;
+  history[method](state, "", viewUrl(view));
 }
 
 /** Retorna uma entrada interna para o estado normal da tela atual. */

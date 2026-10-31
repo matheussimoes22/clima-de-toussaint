@@ -127,6 +127,11 @@ export const App = {
       ),
     );
     this.elements.modalClose.addEventListener("click", () => self.closeModal());
+    // O botão se move durante o FLIP: iniciar no toque evita perder o clique
+    // caso a expansão desloque o botão antes de o usuário soltar o dedo.
+    this.elements.modalClose.addEventListener("pointerdown", (event) => {
+      if (event.button === 0) self.closeModal();
+    });
     this.elements.modal.addEventListener("click", (e) => {
       if (e.target === self.elements.modal) self.closeModal();
     });
@@ -373,10 +378,13 @@ export const App = {
       this.navigate(state.view, { historyMode: "none" });
     }
     this.setSettingsOpen(state.layer === "settings");
-    this.setModalOpen(state.layer === "modal", {
-      restoreFocus:
-        wasModalOpen && state.layer !== "modal" && state.view === previousView,
-    });
+    if (state.layer === "modal") {
+      this.restoreModalDetail(state.detail);
+    } else {
+      this.setModalOpen(false, {
+        restoreFocus: wasModalOpen && state.view === previousView,
+      });
+    }
     this._historyClosePending = false;
   },
 
@@ -427,7 +435,10 @@ export const App = {
   },
 
   /** Abre o diálogo e, no calendário, expande visualmente a partir do card. */
-  openModal({ variant = "default", sourceElement = null } = {}) {
+  openModal({ variant = "default", sourceElement = null, detail = null } = {}) {
+    this.cancelModalOpeningAnimations();
+    this._modalCloseToken = null;
+    this._modalClosing = false;
     clearTimeout(this._modalCloseCleanup);
     this._modalCloseAnimation?.cancel?.();
     this._modalCloseAnimation = null;
@@ -442,7 +453,43 @@ export const App = {
       // o painel grande por um quadro antes de ele nascer do card.
       this.animateDayModalFrom(sourceElement);
     }
-    pushLayer(this.state.currentView, "modal");
+    if (!this._restoringModal)
+      pushLayer(this.state.currentView, "modal", detail);
+  },
+
+  /** Reconstrói o conteúdo no idioma/calendário atuais, sem duplicar histórico. */
+  restoreModalDetail(detail) {
+    this._restoringModal = true;
+    this.setModalOpen(false, { restoreFocus: false });
+    try {
+      if (detail?.kind === "day") {
+        const date = localDateFromKey(detail.date);
+        if (date) this.openDayModal(date);
+      } else if (detail?.kind === "metric") {
+        this.openDetailModalWithVal(
+          detail.type,
+          detail.value,
+          detail.conditionKey,
+        );
+      } else if (detail?.kind === "season") {
+        this.openSeasonModal(detail.season);
+      } else if (detail?.kind === "event") {
+        this.openEventNews(detail.eventKey, detail.date, detail.daysAhead);
+      } else {
+        this.openDetailModal(detail?.type || "Detalhes");
+      }
+    } finally {
+      this._restoringModal = false;
+    }
+  },
+
+  cancelModalOpeningAnimations() {
+    this._modalAnimation?.cancel();
+    this._modalAnimation = null;
+    this._modalRevealAnimations?.forEach((animation) => animation.cancel());
+    this._modalRevealAnimations = [];
+    this._sourceAnimation?.cancel();
+    this._sourceAnimation = null;
   },
 
   /** Executa um FLIP: o painel nasce do retângulo do dia selecionado. */
@@ -490,7 +537,7 @@ export const App = {
       this.elements.modalContent.firstElementChild,
       this.elements.modalBody,
     ].filter(Boolean);
-    revealTargets.forEach((element) =>
+    this._modalRevealAnimations = revealTargets.map((element) =>
       element.animate(
         [
           { opacity: 0, transform: "translateY(12px)", offset: 0 },
@@ -500,7 +547,7 @@ export const App = {
         { duration: 560, easing: "cubic-bezier(.18,.8,.2,1)" },
       ),
     );
-    sourceElement.animate(
+    this._sourceAnimation = sourceElement.animate(
       [
         { transform: "scale(1)", opacity: 1 },
         { transform: "scale(0.96)", opacity: 0.72 },
@@ -522,7 +569,7 @@ export const App = {
     const visibleStyle = getComputedStyle(this.elements.modalContent);
     const fromTransform = visibleStyle.transform;
     const fromOpacity = visibleStyle.opacity;
-    this._modalAnimation?.cancel();
+    this.cancelModalOpeningAnimations();
     const source = sourceElement.getBoundingClientRect();
     const target = this.elements.modalContent.getBoundingClientRect();
     const translateX =
@@ -534,11 +581,6 @@ export const App = {
     this._modalCloseAnimation = this.elements.modalContent.animate(
       [
         { transform: fromTransform, opacity: fromOpacity },
-        {
-          transform: `translate(${translateX * 0.84}px, ${translateY * 0.84}px) scale(${Math.max(0.08, scaleX * 1.16)}, ${Math.max(0.08, scaleY * 1.16)})`,
-          opacity: 0.9,
-          offset: 0.78,
-        },
         {
           transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`,
           // O painel some antes de permanecer sobre o card de origem. Sem
@@ -559,14 +601,16 @@ export const App = {
     this.elements.modalTitle.textContent = t(type);
     const info = t("Informação não disponível.");
     this.elements.modalBody.innerHTML = `<div class="p-4 rounded-lg bg-slate-700 border border-slate-600"><p class="text-gray-200 text-lg leading-relaxed">${info}</p></div>`;
-    this.openModal();
+    this.openModal({ detail: { kind: "info", type } });
   },
 
   openDetailModalWithVal(type, val, conditionKey) {
     this.elements.modalTitle.textContent = t(type);
     const desc = getMetricDescription(type, val, conditionKey);
     this.elements.modalBody.innerHTML = `<div class="p-4 rounded-lg bg-slate-700 border border-slate-600"><p class="text-gray-200 text-lg leading-relaxed">${desc}</p></div>`;
-    this.openModal();
+    this.openModal({
+      detail: { kind: "metric", type, value: val, conditionKey },
+    });
   },
 
   /** Retorna o recorde versionado de uma única região. */
@@ -712,7 +756,14 @@ export const App = {
     }
 
     // Calcular dia dentro do Savaed (contínuo)
-    const diffTime = date - currentSavaed.date;
+    // Conta datas civis; um dia com horário de verão pode ter 23 ou 25 horas.
+    const diffTime =
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
+      Date.UTC(
+        currentSavaed.date.getFullYear(),
+        currentSavaed.date.getMonth(),
+        currentSavaed.date.getDate(),
+      );
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const elvenDay = diffDays + 1; // Dia 1 no início
 
@@ -970,8 +1021,12 @@ export const App = {
       </div>
       <span class="day-detail-rain">${uiIcon("drop")} ${weather.precipChance}%</span>
     </section>`;
-    this.elements.modalBody.innerHTML = `${overviewHtml}<h4 class="day-detail-section-title font-cinzel text-lg text-amber-400 mt-6 mb-4">${t("Previsão 24h")}</h4>${hourlyHtml}${detailsHtml}${holidayHtml}`;
-    this.openModal({ variant: "day", sourceElement });
+    this.elements.modalBody.innerHTML = `${overviewHtml}<h4 class="day-detail-section-title font-cinzel text-lg text-amber-400 mt-6 mb-4">${t("Previsão horária")}</h4>${hourlyHtml}${detailsHtml}${holidayHtml}`;
+    this.openModal({
+      variant: "day",
+      sourceElement,
+      detail: { kind: "day", date: this.dateKey(date) },
+    });
     this.elements.modalBody.scrollTop = 0;
   },
 
@@ -993,12 +1048,20 @@ export const App = {
     }
     modalHtml += "</div>";
     this.elements.modalBody.innerHTML = modalHtml;
-    this.openModal();
+    this.openModal({ detail: { kind: "season", season: currentSeasonKey } });
     this.elements.modalBody.scrollTop = 0;
   },
 
   /** Alterna o diálogo visualmente; o histórico é controlado pelos métodos públicos. */
   setModalOpen(isOpen, { restoreFocus = true } = {}) {
+    if (!isOpen) {
+      this._modalCloseToken = null;
+      this._modalClosing = false;
+      this.cancelModalOpeningAnimations();
+      clearTimeout(this._modalCloseCleanup);
+      this._modalCloseAnimation?.cancel();
+      this._modalCloseAnimation = null;
+    }
     if (isOpen) {
       clearTimeout(this._modalCloseCleanup);
       this._modalCloseAnimation?.cancel();
@@ -1042,8 +1105,12 @@ export const App = {
 
   /** Fecha o diálogo pela entrada anterior para que Voltar e o botão X coincidam. */
   closeModal() {
+    if (!this.elements.modal.classList.contains("open")) return;
     if (this._modalClosing || this._historyClosePending) return;
+    const closeToken = {};
+    this._modalCloseToken = closeToken;
     const finish = () => {
+      if (this._modalCloseToken !== closeToken) return;
       this._modalClosing = false;
       if (
         history.state?.appId === APP_HISTORY_ID &&
@@ -1055,12 +1122,6 @@ export const App = {
       } else {
         this.setModalOpen(false);
       }
-      // Mantém o último quadro recolhido enquanto o fundo termina de sumir.
-      clearTimeout(this._modalCloseCleanup);
-      this._modalCloseCleanup = setTimeout(() => {
-        this._modalCloseAnimation?.cancel?.();
-        this._modalCloseAnimation = null;
-      }, 320);
     };
     if (
       this.elements.modal.classList.contains("day-detail-modal") &&
@@ -1082,19 +1143,31 @@ export const App = {
     const buttonType = isInteractive ? ' type="button"' : "";
     return `<${tag}${buttonType} class="bg-slate-800 p-4 rounded-lg shadow-lg border border-slate-700 ${hoverClass}" data-type="${type}" data-value="${plainValue}"><div class="flex items-center space-x-3 mb-2"><span class="text-2xl" aria-hidden="true">${icon}</span><span class="text-sm font-semibold text-gray-400 uppercase">${title}</span></div><p class="text-xl md:text-2xl font-bold text-white">${value}</p></${tag}>`;
   },
-  renderAlert(message, type = "info") {
+  renderAlert(message, type = "info", alertId = message) {
+    const key = encodeURIComponent(
+      `${this.dateKey(this.state.currentDate)}:${this.state.currentLocation}:${alertId}`,
+    );
+    this._dismissedAlerts ??= new Set();
+    if (this._dismissedAlerts.has(key)) return;
     const colors = {
       info: "bg-blue-600",
       warning: "bg-yellow-600",
       danger: "bg-red-700",
     };
-    const alertHtml = `<div class="alert-item ${colors[type]} text-white px-4 py-2 rounded-full shadow-md mb-2 flex justify-between items-center text-sm font-medium"><span>${message}</span><button type="button" aria-label="${t("Fechar")}" class="alert-close ml-3 min-w-6 min-h-6 text-lg leading-none opacity-70 hover:opacity-100">&times;</button></div>`;
+    const alertHtml = `<div data-alert-key="${key}" class="alert-item ${colors[type]} text-white px-4 py-2 rounded-full shadow-md mb-2 flex justify-between items-center text-sm font-medium"><span class="min-w-0">${message}</span><button type="button" aria-label="${t("Fechar")}" class="alert-close shrink-0 ml-3 min-w-6 min-h-6 text-lg leading-none opacity-70 hover:opacity-100">&times;</button></div>`;
     this.elements.desktopAlert.insertAdjacentHTML("beforeend", alertHtml);
     const mobileContainer = document.getElementById("mobile-alert-container");
     if (mobileContainer)
       mobileContainer.insertAdjacentHTML("beforeend", alertHtml);
     document.querySelectorAll(".alert-close").forEach((btn) => {
-      btn.onclick = (e) => e.target.closest(".alert-item").remove();
+      btn.onclick = (e) => {
+        const dismissedKey =
+          e.currentTarget.closest(".alert-item").dataset.alertKey;
+        this._dismissedAlerts.add(dismissedKey);
+        document.querySelectorAll(".alert-item").forEach((item) => {
+          if (item.dataset.alertKey === dismissedKey) item.remove();
+        });
+      };
     });
   },
   checkAlerts() {
@@ -1110,25 +1183,46 @@ export const App = {
         0,
       );
     if (occurrence("storm"))
-      this.renderAlert(t("Alerta: Tempestade prevista para hoje!"), "danger");
+      this.renderAlert(
+        t("Alerta: Tempestade prevista para hoje!"),
+        "danger",
+        "storm",
+      );
     else if (occurrence("snow"))
-      this.renderAlert(t("Aviso: Rara neve prevista para hoje!"), "info");
+      this.renderAlert(
+        t("Aviso: Rara neve prevista para hoje!"),
+        "info",
+        "snow",
+      );
     else if (occurrence("fog")?.isActive)
       this.renderAlert(
         t("Aviso: Neblina intensa. Cuidado nas estradas."),
         "info",
+        "fog",
       );
     else if (occurrence("heat")?.isActive)
-      this.renderAlert(t("Alerta: Onda de calor no momento"), "warning");
+      this.renderAlert(
+        t("Alerta: Onda de calor no momento"),
+        "warning",
+        "heat",
+      );
     else if (occurrence("cold")?.isActive)
-      this.renderAlert(t("Aviso: Noite fria. Cuidado com a geada."), "info");
+      this.renderAlert(
+        t("Aviso: Noite fria. Cuidado com a geada."),
+        "info",
+        "cold",
+      );
     let tomorrow = new Date(this.state.currentDate);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowHoliday = WeatherEngine.getHoliday(tomorrow);
     if (tomorrowHoliday) {
       const tKey = `${tomorrow.getMonth() + 1}-${tomorrow.getDate()}`;
       const hLocal = tHoliday(tomorrowHoliday, tKey);
-      this.renderAlert(`${t("Amanhã:")} ${hLocal.name}`, "info");
+      this.renderAlert(
+        `${t("Amanhã:")} ${hLocal.name}`,
+        "info",
+        `holiday:${tKey}`,
+      );
     }
   },
 };

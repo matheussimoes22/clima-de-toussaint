@@ -89,7 +89,9 @@ export const CalendarView = {
           const eData = this.getElvenData(date);
           const longNameClass =
             eData.savaed.length > 9 ? " calendar-savaed--long" : "";
-          elvenDayInfo = `<div class="calendar-elven-date"><span>${t("Dia")} ${eData.day}</span><span class="calendar-savaed${longNameClass}">${eData.savaed}</span></div>`;
+          const savaedLabel =
+            eData.savaed === "Midinváerne" ? "Midin<wbr>váerne" : eData.savaed;
+          elvenDayInfo = `<div class="calendar-elven-date"><span>${t("Dia")} ${eData.day}</span><span class="calendar-savaed${longNameClass}" title="${eData.savaed}">${savaedLabel}</span></div>`;
           iconSizeClass = "text-sm md:text-lg";
           tempSizeClass =
             "text-[9px] md:text-xs font-bold leading-none mt-px md:mt-0.5";
