@@ -2195,3 +2195,1311 @@ body.fx-bloodmoon #real-time-clock {
     min-width: 0;
   }
 }
+
+#solar-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    #ec945666,
+    #a3557333 45%,
+    transparent 75%
+  );
+  transition: opacity 2s ease;
+}
+.shooting-star {
+  position: absolute;
+  width: 110px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #fff4d9);
+  border-radius: 50%;
+  opacity: 0;
+  transform: rotate(35deg);
+  animation: meteor-pass 1.6s ease-out forwards;
+}
+@keyframes meteor-pass {
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(240px, 170px) rotate(35deg);
+  }
+}
+body:not(.fx-stars) .shooting-star {
+  display: none;
+}
+body.fx-stars #weather-bg::before {
+  animation-duration: 3.7s;
+}
+body.fx-stars #weather-bg::after {
+  animation-duration: 5.3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  #solar-glow {
+    transition: none;
+  }
+  .shooting-star {
+    display: none;
+  }
+}
+
+.sky-crossfade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 2s ease;
+}
+
+/* Lua monumental de Toussaint, atrás de toda a interface. */
+.sky-moon {
+  position: absolute;
+  right: 7vw;
+  top: 7vh;
+  width: clamp(180px, 24vw, 340px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2s ease;
+  isolation: isolate;
+}
+.sky-moon svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 12px #e8dcad22);
+}
+.sky-moon-halo {
+  position: absolute;
+  inset: -45%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #f8e7b522 0%,
+    #c7d9f012 30%,
+    transparent 67%
+  );
+  opacity: var(--moon-glow, 0.5);
+  transition: opacity 2s ease;
+}
+.sky-moon--blood .sky-moon-halo {
+  background: radial-gradient(circle, #ed774440, transparent 65%);
+}
+@media (max-width: 600px) {
+  .sky-moon {
+    right: -22px;
+    top: 4vh;
+    width: 210px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-moon,
+  .sky-moon-halo {
+    transition: none;
+  }
+}
+
+.sky-moon {
+  right: auto;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity 2s ease,
+    left 1s linear,
+    top 1s linear;
+}
+@media (max-width: 600px) {
+  .sky-moon {
+    right: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-moon {
+    transition: none;
+  }
+}
+
+/* O disco cruza a borda inferior; não se dissolve no ocaso. */
+.sky-moon {
+  --moon-size: clamp(180px, 24vw, 340px);
+  width: var(--moon-size);
+}
+.sky-moon-halo {
+  background: radial-gradient(
+    circle,
+    #dde8f01a 0%,
+    #c7d9f00c 30%,
+    transparent 67%
+  );
+  transition: none;
+}
+.sky-moon svg {
+  filter: drop-shadow(0 0 10px #dce6ee16);
+}
+@media (max-width: 600px) {
+  .sky-moon {
+    --moon-size: 210px;
+  }
+}
+
+/* Atmosfera compartilhada entre aplicativo e simulador. */
+.sky-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sky-clouds {
+  position: absolute;
+  inset: 0;
+  opacity: var(--cloud-opacity);
+  transition: opacity 3s ease;
+}
+.sky-cloud {
+  position: absolute;
+  left: calc(-30% + var(--i) * 20%);
+  top: calc(-8% + var(--i) * 7%);
+  width: 60vw;
+  height: 28vh;
+  min-width: 350px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 30% 60%, #c5cedb88, transparent 60%),
+    radial-gradient(ellipse at 65% 42%, #e3e6eaaa, transparent 62%),
+    radial-gradient(ellipse at 78% 70%, #b9c5d477, transparent 55%);
+  animation: sky-cloud-drift var(--cloud-speed, 60s) ease-in-out infinite
+    alternate;
+  animation-delay: calc(var(--i) * -11s);
+}
+#weather-bg[data-dark="true"] .sky-cloud {
+  filter: brightness(0.45);
+}
+#weather-bg[data-sky="storm"] .sky-cloud {
+  filter: brightness(0.32);
+}
+@keyframes sky-cloud-drift {
+  from {
+    transform: translateX(-12vw);
+  }
+  to {
+    transform: translateX(14vw);
+  }
+}
+.sky-mist {
+  position: absolute;
+  inset: 35% -20% -15%;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 25% 85%, #c3d7e744, transparent 55%),
+    radial-gradient(ellipse at 80% 65%, #dbe5eb33, transparent 60%);
+  transition: opacity 3s;
+  animation: sky-mist-drift 25s ease-in-out infinite alternate;
+}
+#weather-bg[data-sky="fog"] .sky-mist {
+  opacity: 0.9;
+}
+#weather-bg[data-sky="heavy_rain"] .sky-mist,
+#weather-bg[data-sky="storm"] .sky-mist {
+  opacity: 0.35;
+}
+@keyframes sky-mist-drift {
+  to {
+    transform: translate(8vw, -4vh);
+  }
+}
+.sky-rain-depth {
+  position: absolute;
+  inset: -200px;
+  opacity: 0;
+  background-image: linear-gradient(
+    104deg,
+    transparent 49%,
+    #c7e5ff44 50%,
+    transparent 51%
+  );
+  background-size: 73px 110px;
+  animation: sky-rain-depth 1.1s linear infinite;
+  transition: opacity 2s;
+}
+#weather-bg[data-sky="heavy_rain"] .sky-rain-depth,
+#weather-bg[data-sky="storm"] .sky-rain-depth {
+  opacity: 0.3;
+}
+@keyframes sky-rain-depth {
+  to {
+    transform: translate(-73px, 110px);
+  }
+}
+/* Flocos ramificados no lugar dos pontos parecidos com estrelas. */
+body.fx-snow #weather-bg::before {
+  display: none;
+}
+.sky-snowflakes {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2s;
+}
+#weather-bg[data-sky="snow"] .sky-snowflakes {
+  opacity: 0.8;
+}
+.sky-snowflake {
+  position: absolute;
+  top: -35px;
+  width: var(--size);
+  height: var(--size);
+  color: #e3eef9;
+  animation: sky-flake-fall var(--duration) linear var(--delay) infinite;
+  animation-play-state: paused;
+}
+.sky-snowflake svg {
+  width: 100%;
+  height: 100%;
+}
+#weather-bg[data-sky="snow"] .sky-snowflake {
+  animation-play-state: running;
+}
+@keyframes sky-flake-fall {
+  0% {
+    transform: translate(0, -40px) rotate(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(var(--drift), 50vh) rotate(100deg);
+  }
+  92% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(0, calc(100vh + 80px)) rotate(200deg);
+    opacity: 0;
+  }
+}
+/* Um único clarão suave por ocorrência, em intervalos irregulares. */
+body.fx-storm #weather-bg::after {
+  animation: none;
+  background: none;
+  opacity: 0;
+}
+.sky-lightning {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at var(--strike-x) 0%,
+    #d9e9ff44,
+    transparent 65%
+  );
+  opacity: 0;
+  animation: sky-strike 1.2s ease-out forwards;
+}
+.sky-lightning svg {
+  position: absolute;
+  left: var(--strike-x);
+  top: 0;
+  width: 120px;
+  height: 45vh;
+  fill: none;
+  stroke: #e5f2ff;
+  stroke-width: 1.8;
+  filter: drop-shadow(0 0 7px #9fbaff);
+}
+.sky-lightning .lightning-branch {
+  stroke-width: 0.7;
+  opacity: 0.6;
+}
+@keyframes sky-strike {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.sky-sunbeams {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: conic-gradient(
+    from 155deg at 85% 0%,
+    transparent 0deg,
+    #f3d58b0d 8deg,
+    transparent 15deg,
+    #f3d58b0a 25deg,
+    transparent 35deg
+  );
+  transition: opacity 3s;
+}
+#weather-bg[data-sky="clear"][data-dark="false"] .sky-sunbeams {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-cloud,
+  .sky-mist,
+  .sky-rain-depth,
+  .sky-snowflake {
+    animation: none !important;
+  }
+  .sky-lightning {
+    display: none;
+  }
+  .sky-snowflake {
+    top: calc(var(--size) * 15);
+    opacity: 0.55;
+  }
+  .sky-atmosphere * {
+    transition: none !important;
+  }
+}
+
+/* Silhouettes de cumulus et éclairs dessinés. */
+.sky-cloud {
+  background: none;
+  border-radius: 0;
+  width: clamp(320px, 43vw, 720px);
+  height: clamp(125px, 18vw, 280px);
+  min-width: 0;
+  top: calc(-6% + var(--i) * 9%);
+}
+.sky-cloud svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 12px #17273c22);
+}
+#weather-bg[data-sky="cloudy"] .sky-cloud:nth-child(n + 4) {
+  display: none;
+}
+#weather-bg[data-sky="cloudy"] .sky-clouds {
+  opacity: 0.85;
+}
+.sky-lightning {
+  z-index: 3;
+  background: radial-gradient(
+    ellipse at var(--strike-x) 0%,
+    #d9e9ff55,
+    transparent 75%
+  );
+}
+.sky-lightning svg {
+  width: clamp(120px, 18vw, 280px);
+  height: 65vh;
+  transform: scaleX(var(--strike-flip, 1));
+  stroke-width: 2.4;
+}
+.sky-lightning path {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: sky-bolt-draw 0.2s ease-out forwards;
+}
+.sky-lightning .lightning-branch {
+  animation-delay: 0.08s;
+}
+@keyframes sky-bolt-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes sky-strike {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  22% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sky-sun {
+  --sun-size: clamp(95px, 12vw, 180px);
+  position: absolute;
+  width: var(--sun-size);
+  height: var(--sun-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition:
+    left 1s linear,
+    top 1s linear,
+    opacity 2s ease;
+}
+.sky-sun-disc {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 43% 38%, #fffce9, #ffefad 55%, #efbc68);
+  box-shadow:
+    0 0 24px #ffdc9d44,
+    0 0 65px #eabc4930;
+}
+.sky-sun-aura {
+  position: absolute;
+  inset: -110%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f5cb7022, transparent 65%);
+}
+.sky-sun--low .sky-sun-disc {
+  background: radial-gradient(circle at 43% 38%, #ffefba, #edaa64 65%, #d97e52);
+}
+body.fx-sun #weather-bg::before {
+  animation: none;
+  opacity: 0.2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-sun {
+    transition: none;
+  }
+  .sky-lightning path {
+    animation: none;
+  }
+}
+
+/* Céu diurno e chaleur: couleurs lumineuses derrière des panneaux lisibles. */
+#weather-bg[data-mood="day"] {
+  background: linear-gradient(180deg, #397b9c 0%, #89b7bd 55%, #e1cba0 100%);
+}
+#weather-bg[data-mood="heat"] {
+  background:
+    radial-gradient(ellipse at 60% 5%, #fff0b777, transparent 60%),
+    linear-gradient(180deg, #a47135 0%, #cba55e 45%, #e0ba75 76%, #b7753d 100%);
+}
+#weather-bg[data-mood="muted"][data-dark="false"] {
+  background: linear-gradient(180deg, #485b70, #7f939e 65%, #a5a99b);
+}
+#weather-bg[data-mood="night"] {
+  background: linear-gradient(180deg, #091222, #17253b 65%, #263149);
+}
+.sky-sun-ring {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  border: 1px solid #fff1bb66;
+  outline: 1px solid #edce8922;
+  outline-offset: 7px;
+}
+.sky-heat-waves {
+  position: absolute;
+  inset: 40% -10% -10%;
+  opacity: 0;
+  transition: opacity 2s;
+  overflow: hidden;
+}
+#weather-bg[data-mood="heat"] .sky-heat-waves {
+  opacity: 0.65;
+}
+.sky-heat-waves i {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    174deg,
+    transparent 0 65px,
+    #ffe7a518 80px,
+    transparent 98px
+  );
+  animation: heat-rise 9s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.sky-heat-waves i:nth-child(2) {
+  animation-delay: -3s;
+  transform: scaleX(-1);
+}
+.sky-heat-waves i:nth-child(3) {
+  animation-delay: -6s;
+  opacity: 0.5;
+}
+#weather-bg[data-mood="heat"] .sky-heat-waves i {
+  animation-play-state: running;
+}
+@keyframes heat-rise {
+  0% {
+    translate: -12px 70px;
+    scale: 1 0.95;
+    opacity: 0;
+  }
+  30%,
+  65% {
+    opacity: 0.7;
+  }
+  100% {
+    translate: 16px -90px;
+    scale: 1.06 1.1;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-heat-waves i {
+    animation: none !important;
+  }
+  .sky-heat-waves {
+    transition: none;
+  }
+}
+
+/* Vidro localizado: o cenário permanece visível entre e através dos cartões. */
+#main-content,
+.toussaint-header-container {
+  background: transparent;
+  box-shadow: none;
+}
+#main-content {
+  color: #f1f3f5;
+  text-shadow:
+    0 1px 3px #07121bcc,
+    0 0 12px #07121b55;
+}
+#main-content .bg-slate-800,
+#main-content .bg-slate-800\/50,
+#main-content .bg-slate-900,
+#hourly-forecast-container {
+  background: linear-gradient(135deg, #15263b55, #17283c77);
+  border: 1px solid #e4eef52e;
+  box-shadow:
+    inset 0 1px #ffffff1f,
+    0 8px 24px #0815221a;
+  -webkit-backdrop-filter: blur(7px) saturate(1.12);
+  backdrop-filter: blur(7px) saturate(1.12);
+}
+#main-content .text-gray-400,
+#main-content .text-slate-400 {
+  color: #d4dee8;
+}
+#main-content .text-gray-500,
+#main-content .text-slate-500 {
+  color: #c0ccda;
+}
+html.native-app nav.app-nav,
+nav.app-nav {
+  background: linear-gradient(135deg, #14223780, #22384b77);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  border-color: #e8d49f55;
+}
+nav.app-nav .nav-button {
+  color: #e0e7ed;
+  text-shadow: 0 1px 3px #0a1425;
+}
+.toussaint-header-container {
+  text-shadow: 0 2px 5px #17202fcc;
+}
+#main-content .calendar-day {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Direção ducal: vidro, metal envelhecido e mostradores. Arte original. */
+:root {
+  --ducal-gold: #e5c787;
+  --ducal-ivory: #f4eee2;
+  --ducal-edge: #d7bf875c;
+  --ducal-glass: linear-gradient(135deg, #182b3d55, #15233680);
+}
+#app {
+  color: var(--ducal-ivory);
+}
+#app .font-cinzel,
+.toussaint-title {
+  color: var(--ducal-gold);
+  letter-spacing: 0.055em;
+}
+.toussaint-title {
+  font-weight: 500;
+  text-shadow: 0 2px 8px #07121bb3;
+}
+.toussaint-subtitle {
+  color: #e5ded0;
+  letter-spacing: 0.26em;
+}
+.toussaint-header-container::after {
+  background: linear-gradient(90deg, transparent, #d7bf8780, transparent);
+  height: 1px;
+}
+#main-content .bg-slate-800,
+#main-content .bg-slate-800\/50,
+#main-content .bg-slate-900,
+.detail-card-interactive,
+.detail-card-static {
+  background: var(--ducal-glass);
+  border-color: var(--ducal-edge);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px #fff9e51a,
+    0 8px 25px #07121b1c;
+}
+#main-content h1.font-cinzel,
+#main-content h2.font-cinzel,
+#main-content h3.font-cinzel {
+  font-weight: 500;
+}
+#main-content h1.font-cinzel {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #d7bf8755;
+}
+.detail-card-interactive:hover {
+  border-color: #f2d69f;
+  background-color: #7c69372b;
+  transform: translateY(-2px);
+}
+#main-content button:focus-visible,
+nav button:focus-visible {
+  outline: 2px solid #f8dfa3;
+  outline-offset: 3px;
+}
+nav.app-nav {
+  border-color: var(--ducal-edge);
+  box-shadow:
+    inset 0 1px #fff6dd33,
+    0 8px 30px #07121b40;
+}
+html.native-app .nav-button[aria-current="page"],
+.nav-button[aria-current="page"] {
+  background: linear-gradient(135deg, #d6bc6f38, #d6bc6f12);
+  border: 1px solid #e5c78799;
+  color: #ffe6af;
+  box-shadow:
+    inset 0 1px #fff4d64d,
+    0 0 16px #b3944020;
+}
+.nav-button svg {
+  color: inherit;
+}
+
+#main-content .calendar-day {
+  border: 1px solid #d7bf8738;
+  background-color: #13223542;
+  border-radius: 6px;
+}
+#main-content .calendar-day.today {
+  border-color: #f2d69f;
+  box-shadow: inset 0 0 0 1px #f2d69f66;
+  background-color: #cda24d26;
+}
+#main-content .calendar-day--adjacent {
+  opacity: 0.5;
+}
+#main-content .calendar-day:hover {
+  border-color: #e5c787a6;
+}
+#hourly-forecast-container {
+  background: #14233833;
+  border-color: #d7bf8740;
+  backdrop-filter: blur(5px);
+}
+#hourly-forecast-container > div {
+  border-radius: 10px;
+  border-color: #d7bf874d;
+}
+.moon-phase-card .moon-svg {
+  border: 1px solid #d7bf8777;
+  border-radius: 50%;
+  padding: 10px;
+  outline: 1px solid #d7bf8733;
+  outline-offset: 7px;
+}
+#modal-content,
+#mobile-settings-panel {
+  background: linear-gradient(135deg, #142337dc, #182a3ce6);
+  border: 1px solid #d7bf8780;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--ducal-ivory);
+  box-shadow:
+    inset 0 1px #fff3d633,
+    0 20px 60px #050c1766;
+}
+#modal-content .font-cinzel,
+#mobile-settings-panel .font-cinzel {
+  color: var(--ducal-gold);
+}
+#app select,
+#mobile-settings-panel select {
+  background-color: #182a3c99;
+  color: #f4eee2;
+  border: 1px solid #d7bf8770;
+  border-radius: 6px;
+  min-height: 40px;
+}
+#app select option,
+#mobile-settings-panel select option {
+  background: #182a3c;
+  color: #f4eee2;
+}
+#app input[type="range"] {
+  accent-color: var(--ducal-gold);
+}
+.news-card {
+  border-color: #d7bf8770;
+  background: #14233866;
+}
+.news-head {
+  border-bottom: 1px solid #d7bf8740;
+}
+.event-pill {
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  box-shadow: inset 0 1px #fff3d617;
+}
+@media (max-width: 767px) {
+  .toussaint-title {
+    font-size: clamp(1.65rem, 7.8vw, 2.7rem);
+  }
+  .toussaint-subtitle {
+    letter-spacing: 0.2em;
+  }
+  html.native-app nav.app-nav {
+    border-radius: 16px;
+  }
+  html.native-app .nav-button {
+    border-radius: 11px;
+  }
+  #main-content h1.font-cinzel {
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  #main-content .bg-slate-800,
+  #main-content .bg-slate-800\/50,
+  #main-content .bg-slate-900,
+  nav.app-nav {
+    background: #162438f2;
+    backdrop-filter: none;
+  }
+}
+
+/* Vidro fosco calibrado no aparelho: hierarquia e contraste, sem painel global. */
+:root {
+  --ducal-glass: linear-gradient(145deg, #17283cdb, #172437e8);
+  --ducal-gold: #e8cc94;
+  --ducal-edge: #d7bf8740;
+}
+#main-content {
+  text-shadow: none;
+}
+#main-content .bg-slate-800,
+#main-content .bg-slate-800\/50,
+#main-content .bg-slate-900,
+.detail-card-interactive,
+.detail-card-static {
+  background: var(--ducal-glass);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px #ffffff12,
+    0 10px 26px #07121b2b;
+  text-shadow: none;
+}
+#main-content .text-gray-400,
+#main-content .text-slate-400 {
+  color: #b9c7d7;
+}
+#main-content .text-gray-500,
+#main-content .text-slate-500 {
+  color: #a8b9cd;
+}
+.toussaint-header-container {
+  background: radial-gradient(ellipse, #14223666, transparent 72%);
+  padding: 12px 8px 20px;
+  margin-bottom: 20px;
+}
+.toussaint-title {
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-shadow: 0 2px 3px #091423b3;
+}
+.toussaint-subtitle {
+  font-size: 0.7rem;
+  color: #f0ece1;
+  letter-spacing: 0.28em;
+  text-shadow: 0 1px 2px #07121b;
+}
+#app #location-selector {
+  background: #192c409e;
+  border: 1px solid #dec59544;
+  border-radius: 24px;
+  padding: 5px 22px;
+  min-height: 42px;
+  max-width: 100%;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+#real-time-date {
+  font-size: 0.9rem;
+  color: #eef2f6;
+  text-shadow: 0 1px 2px #102033;
+}
+#real-time-clock {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px #102033;
+}
+#open-season-modal {
+  font-size: 1rem;
+  text-shadow: 0 1px 2px #102033;
+}
+#open-season-modal + p {
+  color: #e0e6eb !important;
+  font-size: 0.75rem;
+  text-shadow: 0 1px 2px #102033;
+}
+#hourly-forecast-container {
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  padding: 0;
+}
+#hourly-forecast-container > div {
+  background: #18293edb;
+  border: 1px solid #d7bf8733;
+  border-radius: 12px;
+  text-shadow: none;
+}
+#hourly-forecast-container > #current-hour-forecast {
+  background: linear-gradient(145deg, #655537f2, #3e3b31f2);
+  border: 1px solid #e6c483;
+}
+html.native-app nav.app-nav,
+nav.app-nav {
+  background: linear-gradient(145deg, #17283ce8, #142135ed);
+  border-color: #d7bf8755;
+  box-shadow:
+    inset 0 1px #fff4dc17,
+    0 10px 28px #07121b50;
+}
+nav.app-nav .nav-button {
+  text-shadow: none;
+  color: #c4ceda;
+}
+html.native-app .nav-button[aria-current="page"],
+.nav-button[aria-current="page"] {
+  background: linear-gradient(145deg, #bc9a4933, #bc9a491a);
+  border-color: #d7b970;
+  color: #f4d99d;
+  box-shadow: inset 0 1px #f4d99d33;
+}
+#main-content h3.font-cinzel,
+#main-content h2.font-cinzel {
+  text-shadow: 0 1px 2px #102033;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+.sky-clouds {
+  height: 48vh;
+  bottom: auto;
+}
+.sky-cloud {
+  width: clamp(240px, 35vw, 550px);
+  height: clamp(96px, 14vw, 220px);
+  top: calc(-6% + var(--i) * 12%);
+}
+#weather-bg[data-sky="light_rain"] .sky-clouds,
+#weather-bg[data-sky="heavy_rain"] .sky-clouds {
+  opacity: 0.55;
+}
+#weather-bg[data-sky="light_rain"] .sky-cloud,
+#weather-bg[data-sky="heavy_rain"] .sky-cloud {
+  filter: brightness(0.7);
+}
+@media (max-width: 767px) {
+  .toussaint-title {
+    font-size: 1.9rem;
+  }
+  .toussaint-header-container {
+    padding-top: 0;
+    margin-bottom: 16px;
+  }
+  #main-content .calendar-day {
+    border-radius: 7px;
+    backdrop-filter: none;
+  }
+}
+
+/* A cor do céu segue uma curva contínua entre as etapas do ciclo solar. */
+#weather-bg[data-mood="day"],
+#weather-bg[data-mood="night"] {
+  background: var(--solar-base, linear-gradient(#091222, #263149));
+}
+#weather-bg[data-mood="muted"][data-dark="false"] {
+  background: linear-gradient(#46596b55, #65758655), var(--solar-base);
+}
+
+/* Leitura principal inspirada na hierarquia dos apps Android de clima. */
+.current-weather {
+  position: relative;
+  text-align: center;
+  padding: 8px 0 20px;
+  margin: 0 0 12px;
+  background: radial-gradient(ellipse, #10203470, transparent 72%);
+  color: #f8f6ef;
+}
+.current-weather-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+}
+.current-weather-icon .wx-icon-lg {
+  width: 82px;
+  height: 82px;
+}
+.current-weather-reading {
+  text-align: left;
+}
+.current-weather-temperature {
+  font-family: Inter, sans-serif;
+  font-weight: 300;
+  font-size: clamp(5rem, 18vw, 7rem);
+  letter-spacing: -0.075em;
+  line-height: 1.05;
+  text-shadow: 0 2px 3px #10203366;
+  margin: 0;
+}
+.current-weather-temperature > span {
+  font-weight: 300;
+}
+.current-weather-condition {
+  font-size: 1.05rem;
+  line-height: 1.4;
+  margin: 4px 0 0;
+  color: #f1eee6;
+}
+.current-weather-range {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 18px 0 12px;
+  font-size: 0.8rem;
+  color: #e3e9ee;
+  text-shadow: 0 1px 2px #102033;
+}
+.current-weather-range strong {
+  font-weight: 600;
+  color: #fff;
+}
+.current-weather-range > span {
+  margin: 0 3px;
+  color: #c6d2dc;
+}
+.current-weather-rain {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: 30px;
+  background: #182b43ba;
+  border: 1px solid #a5c4dd33;
+  font-size: 0.85rem;
+  color: #b9d9f1;
+}
+.current-weather-rain .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.celestial-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 16px 8px;
+  margin-bottom: 26px;
+  border: 1px solid #d7bf8738;
+  border-radius: 16px;
+  background: var(--ducal-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #e5e9ef;
+}
+.celestial-strip > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 0 5px;
+  min-width: 0;
+}
+.celestial-strip > div + div {
+  border-left: 1px solid #d7bf872e;
+}
+.celestial-caption {
+  font-size: 0.63rem;
+  letter-spacing: 0.035em;
+  color: #b8c5d5;
+}
+.celestial-strip strong {
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.celestial-strip small {
+  font-size: 0.58rem;
+  color: #afbed0;
+  line-height: 1.4;
+}
+.celestial-phase-icon {
+  font-size: 1.2rem;
+}
+.celestial-strip .celestial-phase-label {
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+@media (max-width: 380px) {
+  .current-weather-main {
+    gap: 14px;
+  }
+  .current-weather-icon .wx-icon-lg {
+    width: 64px;
+    height: 64px;
+  }
+  .current-weather-range {
+    font-size: 0.72rem;
+    gap: 5px;
+  }
+  .celestial-strip {
+    padding: 12px 4px;
+  }
+  .celestial-strip strong {
+    font-size: 0.88rem;
+  }
+}
+@media (min-width: 768px) {
+  .current-weather {
+    padding: 20px 0 26px;
+  }
+  .celestial-caption {
+    font-size: 0.75rem;
+  }
+  .celestial-strip small,
+  .celestial-strip .celestial-phase-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* Étoiles et chaleur suivent la lumière solaire, sans apparition abrupte. */
+@keyframes star-twinkle-distant {
+  from {
+    opacity: calc(0.48 * var(--star-visibility, 1));
+  }
+  to {
+    opacity: calc(0.72 * var(--star-visibility, 1));
+  }
+}
+@keyframes star-twinkle-bright {
+  from {
+    opacity: calc(0.35 * var(--star-visibility, 1));
+  }
+  to {
+    opacity: calc(0.62 * var(--star-visibility, 1));
+  }
+}
+#weather-bg[data-mood="heat"] {
+  background: var(--solar-base);
+}
+.sky-warmth {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, #d8993b44, #e6b04a66 55%, #bd6a3666);
+}
+#weather-bg[data-mood="heat"] .sky-warmth {
+  opacity: var(--day-warmth, 1);
+}
+#weather-bg[data-mood="heat"] .sky-heat-waves {
+  opacity: calc(0.65 * var(--day-warmth, 1));
+}
+.current-weather-condition {
+  font-family: Cinzel, Georgia, serif;
+  font-size: 0.98rem;
+  letter-spacing: 0.04em;
+  color: #efe2c6;
+}
+.current-weather::after {
+  content: "◇";
+  display: block;
+  color: #c5a66c;
+  font-size: 0.8rem;
+  margin-top: 14px;
+  line-height: 1;
+}
+.celestial-strip {
+  border-color: #bda27155;
+  box-shadow: inset 0 1px #e6d0a31a;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.fx-stars #weather-bg::before {
+    opacity: calc(0.6 * var(--star-visibility, 1));
+  }
+  body.fx-stars #weather-bg::after {
+    opacity: calc(0.45 * var(--star-visibility, 1));
+  }
+}
+
+/* Retour à l'identité originale, avec transitions de navigation lisibles. */
+:root {
+  --ducal-gold: #f0cd7e;
+  --ducal-glass: linear-gradient(145deg, #1e293bdc, #152237eb);
+}
+.toussaint-title {
+  font-weight: 700;
+  color: #f4c95f;
+  letter-spacing: 0.13em;
+}
+#app .font-cinzel {
+  color: #f0cd7e;
+}
+html.native-app .nav-button[data-view="today"] svg {
+  color: #f3ce70;
+}
+html.native-app .nav-button[data-view="calendar"] svg {
+  color: #a6c8ee;
+}
+html.native-app .nav-button[data-view="monthly"] svg {
+  color: #93d6bd;
+}
+html.native-app .nav-button[data-view="moon"] svg {
+  color: #c4b1ed;
+}
+#weather-bg[data-sky="light_rain"][data-dark],
+#weather-bg[data-sky="heavy_rain"][data-dark],
+#weather-bg[data-sky="storm"][data-dark],
+#weather-bg[data-sky="overcast"][data-dark],
+#weather-bg[data-sky="fog"][data-dark],
+#weather-bg[data-sky="snow"][data-dark] {
+  background: var(--overcast-base, linear-gradient(#3c4856, #748088));
+}
+#weather-bg[data-sky="light_rain"] .sky-clouds,
+#weather-bg[data-sky="heavy_rain"] .sky-clouds,
+#weather-bg[data-sky="overcast"] .sky-clouds {
+  opacity: 0.85;
+  height: 65vh;
+}
+#weather-bg[data-sky="light_rain"] .sky-cloud,
+#weather-bg[data-sky="heavy_rain"] .sky-cloud,
+#weather-bg[data-sky="overcast"] .sky-cloud {
+  filter: brightness(0.55) saturate(0.15);
+}
+
+/* Shared compositor-friendly surfaces: retain tinted glass and ornamentation
+   without sampling the moving sky once for every nested card. */
+html.native-app #main-content .bg-slate-800,
+html.native-app #main-content .bg-slate-800\/50,
+html.native-app #main-content .bg-slate-900,
+html.native-app #hourly-forecast-container,
+html.native-app #main-content .calendar-day,
+html.native-app .detail-card-interactive,
+html.native-app .detail-card-static,
+html.native-app #modal-content,
+html.native-app #mobile-settings-panel {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.native-app #modal-content {
+  background: linear-gradient(135deg, #142337f5, #182a3cf5);
+  contain: layout paint;
+}
+html.native-app #modal.day-detail-modal:not(.open) #modal-content {
+  will-change: auto;
+}
+html.native-app #mobile-settings-panel {
+  transition:
+    opacity 220ms ease,
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Only visible content needs to paint during a dialog animation. The calendar
+   resumes at the same animation phase when the dialog closes. */
+html.native-app body.modal-visible #main-content *,
+html.native-app body.modal-visible #main-content *::before,
+html.native-app body.modal-visible #main-content *::after {
+  animation-play-state: paused !important;
+}
+html.native-app #modal.open {
+  will-change: opacity;
+}
+/* One translucent tint for fixed chrome; avoid full-screen backdrop sampling
+   while the weather continues moving beneath the Android navigation. */
+html.native-app nav.app-nav,
+html.native-app #location-selector,
+html.native-app #mobile-settings-btn {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* The obscured scene retains its phase while a detail sheet has focus. */
+html.native-app body.modal-visible #weather-bg *,
+html.native-app body.modal-visible #weather-bg::before,
+html.native-app body.modal-visible #weather-bg::after {
+  animation-play-state: paused !important;
+}
+/* The expanded day takes focus; the calendar is covered, rather than remaining
+   visible through the detail sheet. Closing restores it through the same fade. */
+html.native-app #modal.day-detail-modal {
+  background: #101b2a;
+}
+html.native-app #modal.day-detail-modal #modal-content {
+  background: linear-gradient(135deg, #142337, #182a3c);
+}
+/* The same focused card transition on the web; other glass surfaces keep their
+   existing appearance. An opaque detail avoids a washed-out crossfade. */
+#modal.day-detail-modal {
+  background: #101b2a;
+}
+#modal.day-detail-modal #modal-content {
+  background: linear-gradient(135deg, #142337, #182a3c);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Fade only the backdrop, never the entire card and its text. */
+#modal.day-detail-modal,
+html.native-app #modal.day-detail-modal {
+  background: transparent;
+  transition: none;
+}
+#modal.day-detail-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #101b2a;
+  pointer-events: none;
+}
+#modal.day-detail-modal.open::before {
+  animation: day-backdrop-in 300ms ease-out both;
+}
+#modal.day-detail-modal.open.day-card-closing::before {
+  animation: day-backdrop-out 300ms ease-in both;
+}
+@keyframes day-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes day-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #modal.day-detail-modal.open::before {
+    animation: none;
+  }
+}

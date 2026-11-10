@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Simulador · Clima de Toussaint</title
+  ><link rel="stylesheet" href="assets/css/styles.css" /><style>
+    body {
+      margin: 0;
+      color: #fff4dc;
+      background: #0f172a;
+      font-family: Georgia, serif;
+    }
+    main {
+      position: relative;
+      z-index: 3;
+      max-width: 720px;
+      margin: 8vh auto;
+      padding: 28px;
+      background: #142437d9;
+      border: 1px solid #b58c4555;
+      border-radius: 24px;
+      backdrop-filter: blur(7px);
+      text-shadow: none;
+    }
+    h1 {
+      font-size: 30px;
+    }
+    label {
+      display: block;
+      margin: 16px 0;
+    }
+    input,
+    select,
+    button {
+      font: inherit;
+      color: #fff4dc;
+      background: #25334a;
+      padding: 10px;
+      border: 1px solid #b58c4577;
+      border-radius: 8px;
+    }
+    input[type="range"] {
+      width: 95%;
+      padding: 0;
+    }
+    button {
+      cursor: pointer;
+      margin: 5px;
+    }
+    #clock {
+      font-size: 64px;
+      margin: 20px 0 0;
+    }
+    p {
+      line-height: 1.6;
+    }
+    small {
+      opacity: 0.7;
+    }
+  </style>
+  <body>
+    <div id="weather-bg" aria-hidden="true"></div>
+    <button
+      id="show-panel"
+      hidden
+      style="position: fixed; bottom: 20px; left: 20px; z-index: 5"
+    >
+      Mostrar controles
+    </button>
+    <main>
+      <small>PRÉVIA LOCAL · 2.1.0</small>
+      <h1>O céu de Toussaint</h1>
+      <p>
+        Arraste o horário ou reproduza o ciclo acelerado. Esta prévia usa o
+        mesmo motor e os mesmos efeitos do aplicativo.
+      </p>
+      <label>Data <input id="date" type="date" value="2026-11-06" /></label
+      ><label
+        >Localidade
+        <select id="location"></select></label
+      ><label
+        >Cenário
+        <select id="condition">
+          <option value="clear">Céu limpo</option>
+          <option value="cloudy">Nuvens</option>
+          <option value="overcast">Céu encoberto</option>
+          <option value="light_rain">Chuva fraca</option>
+          <option value="heavy_rain">Chuva forte</option>
+          <option value="storm">Tempestade</option>
+          <option value="fog">Neblina</option>
+          <option value="snow">Neve</option>
+          <option value="hot_day">Calor extremo (dia)</option>
+          <option value="cold_night">Frio intenso (noite)</option>
+          <option value="forecast">Previsão calculada</option>
+        </select></label
+      >
+      <label
+        >Lua
+        <select id="phase">
+          <option value="forecast">Fase prevista</option>
+          <option value="0">Nova</option>
+          <option value="1">Crescente</option>
+          <option value="2">Quarto crescente</option>
+          <option value="3">Gibosa crescente</option>
+          <option value="4">Cheia</option>
+          <option value="5">Gibosa minguante</option>
+          <option value="6">Quarto minguante</option>
+          <option value="7">Minguante</option>
+          <option value="blood">Lua de Sangue</option>
+        </select></label
+      >
+      <label
+        ><input id="custom-orbit" type="checkbox" /> Testar horários lunares
+        personalizados</label
+      ><label
+        >Nascer da Lua <input id="moonrise" type="time" value="19:30" /> Pôr da
+        Lua <input id="moonset" type="time" value="06:00"
+      /></label>
+      <label
+        >Velocidade
+        <select id="speed">
+          <option value="1">2 min/s</option>
+          <option value="5">10 min/s</option>
+          <option value="30">60 min/s</option>
+        </select></label
+      >
+      <button id="moon-start">Nascer da Lua</button
+      ><button id="moon-top">Lua no alto</button
+      ><button id="moon-end">Pôr da Lua</button
+      ><button id="noon">Meio-dia</button
+      ><button id="hide-panel">Ocultar controles</button>
+      <label
+        >Etapa solar
+        <select id="solar-stage">
+          <option value="rise:-75">Primeira claridade</option>
+          <option value="rise:-35">Penumbra da manhã</option>
+          <option value="rise:0">Nascer do Sol</option>
+          <option value="rise:30">Manhã dourada</option>
+          <option value="noon:0" selected>Dia pleno</option>
+          <option value="set:-35">Tarde dourada</option>
+          <option value="set:0">Pôr do Sol</option>
+          <option value="set:25">Crepúsculo azul</option>
+          <option value="set:75">Noite plena</option>
+        </select></label
+      >
+      <div id="clock"></div>
+      <p id="summary"></p>
+      <input
+        aria-label="Horário simulado"
+        id="time"
+        type="range"
+        min="0"
+        max="1439"
+        value="1140"
+      />
+      <div>
+        <button id="dawn">Amanhecer</button><button id="dusk">Entardecer</button
+        ><button id="night">Noite limpa</button
+        ><button id="fullmoon">Lua cheia</button
+        ><button id="play">Reproduzir</button
+        ><button id="lightning">Relâmpago (tempestade)</button
+        ><button id="meteor">Estrela cadente</button>
+      </div>
+      <p id="solar"></p>
+      <p id="lunar"></p>
+      <p id="notice" role="status"></p>
+      <small
+        >A reprodução usa a velocidade selecionada. Estrelas cadentes
+        automáticas aparecem em noites limpas a cada 20–75 segundos. Movimento
+        reduzido do sistema é respeitado.</small
+      >
+    </main>
+    <script type="module" src="assets/js/sky-preview.js"></script>
+  </body>
+</html>

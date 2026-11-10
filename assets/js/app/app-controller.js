@@ -1,3 +1,6 @@
+import { morphCalendarCard } from "../navigation/card-morph.js";
+import { animateViewEntry } from "../navigation/view-transition.js";
+import { updateSky } from "../views/sky.js";
 import { findWeatherEvent } from "../engine/weather-events.js";
 import { bloodMoonIcon, uiIcon } from "../views/interface-icons.js";
 /**
@@ -228,8 +231,10 @@ export const App = {
     setInterval(() => {
       const previousDay = self.dateKey(self.state.currentDate);
       const previousHour = self.state.currentDate.getHours();
+      const previousMinute = self.state.currentDate.getMinutes();
       self.state.currentDate = new Date();
       if (
+        self.state.currentDate.getMinutes() !== previousMinute ||
         self.state.currentDate.getHours() !== previousHour ||
         self.dateKey(self.state.currentDate) !== previousDay
       ) {
@@ -270,6 +275,8 @@ export const App = {
           dateEl.dataset.fullDate = self.state.currentDate.toDateString();
         }
       }
+      if (!document.hidden && self._skyWeather)
+        updateSky(self._skyWeather, self.state.currentDate);
       const currentHour = self.state.currentDate.getHours();
       if (
         self.state.lastRenderedHour !== null &&
@@ -331,6 +338,11 @@ export const App = {
   navigate(view, { historyMode = "push" } = {}) {
     if (!["today", "calendar", "monthly", "moon"].includes(view)) return;
     const previousView = this.state.currentView;
+    const order = ["today", "calendar", "monthly", "moon"];
+    this.elements.main.style?.setProperty(
+      "--view-direction",
+      order.indexOf(view) >= order.indexOf(previousView) ? "1" : "-1",
+    );
     this._calendarSwipe?.destroy();
     this.setModalOpen(false, { restoreFocus: false });
     this.setSettingsOpen(false);
@@ -500,63 +512,13 @@ export const App = {
       !this.elements.modalContent?.animate
     )
       return;
-    const source = sourceElement.getBoundingClientRect();
-    const target = this.elements.modalContent.getBoundingClientRect();
-    if (!source.width || !target.width) return;
-    const translateX =
-      source.left + source.width / 2 - (target.left + target.width / 2);
-    const translateY =
-      source.top + source.height / 2 - (target.top + target.height / 2);
-    const scaleX = Math.max(0.08, source.width / target.width);
-    const scaleY = Math.max(0.08, source.height / target.height);
-    this._modalAnimation?.cancel?.();
-    this._modalAnimation = this.elements.modalContent.animate(
-      [
-        {
-          transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`,
-          opacity: 0.92,
-          offset: 0,
-        },
-        {
-          transform: `translate(${translateX * 0.82}px, ${translateY * 0.82}px) scale(${Math.min(1, scaleX * 1.18)}, ${Math.min(1, scaleY * 1.18)})`,
-          opacity: 1,
-          offset: 0.2,
-        },
-        {
-          transform: "translate(0, 0) scale(1)",
-          opacity: 1,
-          offset: 1,
-        },
-      ],
-      {
-        duration: 560,
-        easing: "cubic-bezier(.18,.82,.2,1)",
-      },
-    );
-    const revealTargets = [
-      this.elements.modalContent.firstElementChild,
-      this.elements.modalBody,
-    ].filter(Boolean);
-    this._modalRevealAnimations = revealTargets.map((element) =>
-      element.animate(
-        [
-          { opacity: 0, transform: "translateY(12px)", offset: 0 },
-          { opacity: 0, transform: "translateY(12px)", offset: 0.24 },
-          { opacity: 1, transform: "translateY(0)", offset: 1 },
-        ],
-        { duration: 560, easing: "cubic-bezier(.18,.8,.2,1)" },
-      ),
-    );
-    this._sourceAnimation = sourceElement.animate(
-      [
-        { transform: "scale(1)", opacity: 1 },
-        { transform: "scale(0.96)", opacity: 0.72 },
-      ],
-      { duration: 150, easing: "ease-out" },
+    this._modalAnimation = morphCalendarCard(
+      sourceElement,
+      this.elements.modalContent,
     );
   },
 
-  /** Recolhe a folha no card de origem quando ele ainda está no calendário. */
+  /** Recolhe o detalhe até o quadrado selecionado, também na web. */
   animateDayModalToSource() {
     const sourceElement = this._dayModalSource;
     if (
@@ -565,36 +527,15 @@ export const App = {
       !this.elements.modalContent?.animate
     )
       return Promise.resolve();
-    // Captura o quadro visível antes de cancelar a abertura interrompida.
-    const visibleStyle = getComputedStyle(this.elements.modalContent);
-    const fromTransform = visibleStyle.transform;
-    const fromOpacity = visibleStyle.opacity;
+    const currentRect = this.elements.modalContent.getBoundingClientRect();
     this.cancelModalOpeningAnimations();
-    const source = sourceElement.getBoundingClientRect();
-    const target = this.elements.modalContent.getBoundingClientRect();
-    const translateX =
-      source.left + source.width / 2 - (target.left + target.width / 2);
-    const translateY =
-      source.top + source.height / 2 - (target.top + target.height / 2);
-    const scaleX = Math.max(0.08, source.width / target.width);
-    const scaleY = Math.max(0.08, source.height / target.height);
-    this._modalCloseAnimation = this.elements.modalContent.animate(
-      [
-        { transform: fromTransform, opacity: fromOpacity },
-        {
-          transform: `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`,
-          // O painel some antes de permanecer sobre o card de origem. Sem
-          // isso, o quadro final parece uma miniatura/artefato no calendário.
-          opacity: 0,
-        },
-      ],
-      {
-        duration: 220,
-        easing: "cubic-bezier(.4,0,.8,.2)",
-        fill: "forwards",
-      },
+    this._modalCloseAnimation = morphCalendarCard(
+      sourceElement,
+      this.elements.modalContent,
+      true,
+      currentRect,
     );
-    return this._modalCloseAnimation.finished.catch(() => undefined);
+    return this._modalCloseAnimation.finished;
   },
 
   openDetailModal(type) {
@@ -704,10 +645,10 @@ export const App = {
         this.renderMoon();
         break;
     }
-    // Animação de entrada
-    this.elements.main.classList.remove("view-enter");
-    void this.elements.main.offsetWidth; // reflow para reiniciar animação
-    this.elements.main.classList.add("view-enter");
+    this._viewAnimation = animateViewEntry(
+      this.elements.main,
+      this._viewAnimation,
+    );
     // Aplicar efeito climático ao fundo (usa view 'today' como referência)
     const w = WeatherEngine.getCurrentWeather(
       this.state.currentDate,
@@ -848,6 +789,7 @@ export const App = {
 
   // === FUNDO CLIMÁTICO ===
   applyWeatherFx(weather) {
+    this._skyWeather = weather;
     const cls = [
       "fx-rain",
       "fx-rain-heavy",
@@ -859,7 +801,9 @@ export const App = {
       "fx-stars",
       "fx-bloodmoon",
     ];
-    document.body.classList.remove(...cls);
+    updateSky(weather, this.state.currentDate);
+    const add = (...names) => names.forEach((name) => nextClasses.add(name));
+    const nextClasses = new Set();
     const k = weather.conditionKey || "";
     const isNight = k.includes("night");
     const isBloodActive =
@@ -868,20 +812,20 @@ export const App = {
       this.state.currentDate.getHours() >= 0 &&
       this.state.currentDate.getHours() <= 3;
 
-    if (k.includes("storm"))
-      document.body.classList.add("fx-storm", "fx-rain-heavy");
-    else if (k.includes("heavy_rain"))
-      document.body.classList.add("fx-rain-heavy");
-    else if (k.includes("rain")) document.body.classList.add("fx-rain");
-    else if (k.includes("snow")) document.body.classList.add("fx-snow");
-    else if (k.includes("fog")) document.body.classList.add("fx-fog");
-    else if (k === "clear_day") document.body.classList.add("fx-sun");
+    if (k.includes("storm")) add("fx-storm", "fx-rain-heavy");
+    else if (k.includes("heavy_rain")) add("fx-rain-heavy");
+    else if (k.includes("rain")) add("fx-rain");
+    else if (k.includes("snow")) add("fx-snow");
+    else if (k.includes("fog")) add("fx-fog");
+    else if (k === "clear_day") add("fx-sun");
     else if (isNight) {
-      document.body.classList.add("fx-night");
-      if (k === "clear_night") document.body.classList.add("fx-stars");
+      add("fx-night");
+      if (k === "clear_night") add("fx-stars");
     }
 
-    if (isBloodActive) document.body.classList.add("fx-bloodmoon");
+    if (isBloodActive) add("fx-bloodmoon");
+    for (const name of cls)
+      document.body.classList.toggle(name, nextClasses.has(name));
   },
 
   // === SVG da Lua com iluminação real (renderMoon) ===
@@ -962,7 +906,8 @@ export const App = {
       ? bloodMoonIcon("blood-moon-icon--inline")
       : weather.moon.icon;
 
-    let hourlyHtml = '<div class="flex overflow-x-auto space-x-3 pb-4">';
+    let hourlyHtml =
+      '<div class="day-hourly-strip flex overflow-x-auto space-x-3 pb-4">';
     hourly.forEach((h) => {
       const hourOfForecast = parseInt(h.hour.split(":")[0]);
       const isCurrentHour = hourOfForecast === currentHour;
@@ -1068,6 +1013,7 @@ export const App = {
       this._modalCloseAnimation = null;
     }
     this.elements.modal.classList.toggle("open", isOpen);
+    document.body.classList.toggle("modal-visible", isOpen);
     this.elements.modal.setAttribute("aria-hidden", String(!isOpen));
     this.elements.modal.inert = !isOpen;
     Array.from(document.body.children).forEach((child) => {

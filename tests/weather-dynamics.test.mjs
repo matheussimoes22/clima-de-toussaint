@@ -26,6 +26,33 @@ const keys = [
 const seen = new Set();
 const report = {};
 let exceptionalHotNights = 0;
+
+// A sequência úmida de outono deve variar sem mudar ao recalcular a previsão.
+const autumnPeaks = new Set();
+let autumnHasDryGap = false;
+for (let date = 5; date <= 14; date++) {
+  const day = WeatherEngine.getWeatherForDay(new Date(2026, 10, date));
+  const forecast = WeatherEngine.getHourlyForecast(day);
+  const wetHours = forecast.filter((hour) => hour.precipitationOccurs);
+  assert.ok(wetHours.length > 0);
+  const peak = wetHours.reduce((a, b) =>
+    a.precipAmountMm >= b.precipAmountMm ? a : b,
+  );
+  autumnPeaks.add(peak.hour);
+  autumnHasDryGap ||= wetHours.some(
+    (hour, index) =>
+      index > 0 && parseInt(hour.hour) - parseInt(wetHours[index - 1].hour) > 1,
+  );
+  assert.deepEqual(WeatherEngine.getHourlyForecast(day), forecast);
+}
+assert.ok(
+  autumnPeaks.size >= 6,
+  "Picos de chuva repetitivos na sequência de outono",
+);
+assert.ok(
+  autumnHasDryGap,
+  "Sequência sem episódios de chuva separados por pausa",
+);
 for (const loc of Object.keys(LOCATIONS)) {
   let dry = 0,
     maxDry = 0,

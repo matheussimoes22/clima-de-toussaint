@@ -64,16 +64,36 @@ export function buildHourlyWeather(day, loc, noise, feelsLike, previous = day) {
     summer &&
     day.tempMax >= 22 &&
     (day.humidity >= 45 || day.moistureReserve >= 50);
-  const center =
-    (convective ? 16 + noise(71) * 2 : 6 + noise(71) * 10) +
-    (loc.delayHours || 0);
-  const width = convective ? 3.5 : 5;
+  const delay = loc.delayHours || 0;
+  const regionalCenter =
+    convective && noise(70) < 0.8 ? 14 + noise(71) * 7 : 1 + noise(71) * 21;
+  const center = clamp(regionalCenter + delay, 0, 23);
+  const width = convective ? 1.2 + noise(72) * 2.3 : 1.2 + noise(72) * 3.8;
+  const secondaryOffset = 5 + noise(74) * 3;
+  const secondaryCenter =
+    center + (regionalCenter < 12 ? secondaryOffset : -secondaryOffset);
+  const secondaryWidth = 1 + noise(75) * 1.5;
+  const secondaryStrength =
+    wet && noise(73) < 0.34 ? 0.3 + noise(76) * 0.35 : 0;
   const coldFront = previous.tempMax - day.tempMax >= 5 && day.windSpeed >= 20;
   const rows = [];
   for (let h = 0; h < 24; h++) {
     const distance = Math.abs(h - center);
-    const envelope = wet ? smooth((width + 3 - distance) / 3) : 0;
-    const rainWeight = wet ? Math.max(0, 1 - distance / width) : 0;
+    const secondaryDistance = Math.abs(h - secondaryCenter);
+    const envelope = wet
+      ? Math.max(
+          smooth((width + 3 - distance) / 3),
+          secondaryStrength *
+            smooth((secondaryWidth + 3 - secondaryDistance) / 3),
+        )
+      : 0;
+    const rainWeight = wet
+      ? Math.max(
+          Math.max(0, 1 - distance / width),
+          secondaryStrength *
+            Math.max(0, 1 - secondaryDistance / secondaryWidth),
+        )
+      : 0;
     const daylight = h * 60 >= day.sunriseMinutes && h * 60 < day.sunsetMinutes;
     // Aquecimento até o meio da tarde e perda gradual de calor após o pico.
     let thermal = thermalCycle(day, loc, h);
@@ -92,7 +112,9 @@ export function buildHourlyWeather(day, loc, noise, feelsLike, previous = day) {
   const low = Math.min(...rows.map((r) => r.thermal));
   const high = Math.max(...rows.map((r) => r.thermal));
   const weights = rows.reduce((sum, r) => sum + r.rainWeight, 0);
-  let assigned = 0;
+  const totalCents = Math.round(day.precipAmountMm * 100);
+  let cumulativeWeight = 0;
+  let assignedCents = 0;
   const lastWet = rows.findLastIndex((r) => r.rainWeight > 0);
   return rows.map((r) => {
     const temp = Math.round(
@@ -129,12 +151,13 @@ export function buildHourlyWeather(day, loc, noise, feelsLike, previous = day) {
       cloudCover > 70 ? "overcast" : cloudCover > 28 ? "cloudy" : "clear";
     let precipAmountMm = 0;
     if (r.rainWeight > 0) {
-      precipAmountMm =
+      cumulativeWeight += r.rainWeight;
+      const cumulativeCents =
         r.h === lastWet
-          ? Math.round((day.precipAmountMm - assigned) * 100) / 100
-          : Math.round(((day.precipAmountMm * r.rainWeight) / weights) * 100) /
-            100;
-      assigned += precipAmountMm;
+          ? totalCents
+          : Math.round((totalCents * cumulativeWeight) / weights);
+      precipAmountMm = (cumulativeCents - assignedCents) / 100;
+      assignedCents = cumulativeCents;
       if (precipAmountMm > 0) {
         key = "light_rain";
         if (day.conditionKey.includes("snow") && temp <= 2) key = "snow";
@@ -153,8 +176,11 @@ export function buildHourlyWeather(day, loc, noise, feelsLike, previous = day) {
       humidity = Math.max(humidity, 95);
       cloudCover = Math.max(cloudCover, 75);
     }
+    const gust = smooth((4 - Math.abs(r.h - center)) / 3);
+    const windBase =
+      Math.min(day.windSpeed, 34) + Math.max(0, day.windSpeed - 34) * gust;
     const windSpeed = Math.round(
-      day.windSpeed *
+      windBase *
         (0.65 +
           0.35 * r.thermal +
           0.3 * r.envelope +

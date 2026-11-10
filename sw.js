@@ -1,5 +1,5 @@
 /* Service Worker - Clima de Toussaint */
-const CACHE = "toussaint-v2.0.2";
+const CACHE = "toussaint-v2.1.0";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,7 +9,14 @@ const ASSETS = [
   "./assets/css/styles.css",
   "./assets/icons/app-icon.png",
   "./assets/js/main.js",
+  "./assets/js/navigation/view-transition.js",
+  "./assets/js/navigation/card-morph.js",
   "./assets/js/version.js",
+  "./assets/js/views/sky.js",
+  "./assets/js/views/solar-cycle.js",
+  "./assets/js/views/sky-sun.js",
+  "./assets/js/views/sky-atmosphere.js",
+  "./assets/js/views/sky-moon.js",
   "./assets/icons/favicon.svg",
   "./assets/icons/splash-knight.png",
   "./assets/js/app/app-controller.js",
@@ -95,3 +102,6 @@ self.addEventListener("fetch", (e) => {
       .catch(() => caches.match(req)),
   );
 });
+
+
+

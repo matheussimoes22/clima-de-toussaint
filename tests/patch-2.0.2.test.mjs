@@ -59,7 +59,7 @@ globalThis.document = {
     return dom.get(id);
   },
   querySelectorAll: () => [],
-  body: { children: [] },
+  body: { ...element(), children: [] },
   activeElement: element(),
 };
 globalThis.window = {

@@ -6,6 +6,7 @@ for (const name of [
   "assets",
   "index.html",
   "clima-de-toussaint.html",
+  "simulador.html",
   "favicon.ico",
   "manifest.webmanifest",
   "sw.js",

@@ -9,9 +9,7 @@ export function matchesEvent(key, day, hour, previous, locKey) {
   switch (key) {
     case "heat":
       return hour.isNight
-        ? day.heatWaveBonus >= 4 &&
-            day.tempMax >= season.tempMax + loc.tempOffset + 2 &&
-            hour.temp >= 30
+        ? day.heatWaveBonus >= 4 && hour.temp >= 30
         : day.tempMax >= season.tempMax + loc.tempOffset + 2 &&
             hour.temp >= Math.max(30, season.tempMax + loc.tempOffset - 1) &&
             hour.temp >= day.tempMin + 6;

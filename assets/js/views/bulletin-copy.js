@@ -340,7 +340,19 @@ export function bulletinCopy(key, day, hours, location, lang) {
     title: variant === 2 ? `${title} — ${location}` : title,
     lead: `${introductions[variant]} ${metrics} ${en ? "in" : "em"} ${location}.`,
     impact: impacts[key][en ? 1 : 0],
-    context: details[variant] + rainfall + caveat,
+    context:
+      details[variant] +
+      rainfall +
+      caveat +
+      (["heat", "cold"].includes(key)
+        ? en
+          ? " These are the hours of greatest thermal stress; the broader warm or cold spell may span several days."
+          : " Estes são os horários de maior desconforto térmico; o período de calor ou frio pode se estender por vários dias."
+        : key === "front"
+          ? en
+            ? " This interval marks the front's passage, not continuous rainfall."
+            : " O intervalo indica a passagem da frente, sem significar chuva contínua."
+          : ""),
   };
 }
 

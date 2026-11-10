@@ -139,20 +139,18 @@ export const TodayView = {
 
                         ${bloodMoonCard}
 
-                        <div class="bg-slate-800 p-6 rounded-lg shadow-xl flex flex-col md:flex-row items-center justify-between mb-6 border border-slate-700">
-                            <div class="flex items-center space-x-4 mb-4 md:mb-0">${resolveWxSvg(weather.conditionKey, { isBloodMoon: isBloodMoonVisible(weather.conditionKey, currentHour, weather.moon.isBloodMoon), sizeClass: "wx-icon-lg" })}<div><p class="text-5xl md:text-6xl font-bold">${weather.currentTemp}°</p><p class="text-xl text-gray-300">${tCondName(weather.conditionKey)}</p></div></div>
-                            <div class="text-center md:text-right space-y-1 w-full md:w-auto">
-                                <p class="text-lg">${t("Sensação")}: <strong>${weather.currentFeelsLike}°</strong></p>
-                                <p class="text-lg font-semibold text-blue-300">${t("Chuva")}: ${weather.precipChance}%</p>
-                                <p class="text-sm text-gray-400">${t("Min")} ${weather.tempMin}° / ${t("Max")} ${weather.tempMax}°</p>
-                                <div class="flex items-center justify-center md:justify-end space-x-4 mt-3 pt-3 border-t border-slate-600/50">
-                                    <div class="flex flex-col items-center text-xs text-amber-200/80"><span title="${t("Nascer do Sol")}">${ICON_SUNRISE} ${weather.sunrise}</span><span title="${t("Pôr do Sol")}" class="mt-1">${ICON_SUNSET} ${weather.sunset}</span></div>
-                                    <div class="h-8 w-px bg-slate-600/50"></div>
-                                    <div class="flex flex-col items-center text-xs text-slate-300"><span title="${t("Nascer da Lua")}">${ICON_MOONRISE} ${weather.moonrise}</span><span title="${t("Ocaso da Lua")}" class="mt-1">${ICON_MOONSET} ${weather.moonset}</span></div>
-                                    <div class="h-8 w-px bg-slate-600/50"></div>
-                                    <div class="flex flex-col items-center text-xs ${moonClass}"><span class="text-lg">${mainMoonIcon}</span><span>${displayMoonPhase}</span></div>
-                                </div>
-                            </div>
+                        <section class="current-weather" aria-label="${tCondName(weather.conditionKey)}">
+                          <div class="current-weather-main">
+                            <div class="current-weather-icon" aria-hidden="true">${resolveWxSvg(weather.conditionKey, { isBloodMoon: isBloodMoonActive, sizeClass: "wx-icon-lg" })}</div>
+                            <div class="current-weather-reading"><p class="current-weather-temperature">${weather.currentTemp}<span>°</span></p><p class="current-weather-condition">${tCondName(weather.conditionKey)}</p></div>
+                          </div>
+                          <p class="current-weather-range">${t("Max")} <strong>${weather.tempMax}°</strong><span>·</span>${t("Min")} <strong>${weather.tempMin}°</strong><span>·</span>${t("Sensação")} <strong>${weather.currentFeelsLike}°</strong></p>
+                          <div class="current-weather-rain">${uiIcon("drop")} <span>${t("Chuva")}</span><strong>${weather.precipChance}%</strong></div>
+                        </section>
+                        <div class="celestial-strip">
+                          <div><span class="celestial-caption">${t("Nascer do Sol")}</span><strong>${ICON_SUNRISE} ${weather.sunrise}</strong><small>${t("Pôr do Sol")} · ${weather.sunset}</small></div>
+                          <div><span class="celestial-caption">${t("Nascer da Lua")}</span><strong>${ICON_MOONRISE} ${weather.moonrise}</strong><small>${t("Ocaso da Lua")} · ${weather.moonset}</small></div>
+                          <div class="${moonClass}"><span aria-hidden="true" class="celestial-phase-icon">${mainMoonIcon}</span><strong class="celestial-phase-label">${displayMoonPhase}</strong><small>${weather.moon.illumination}%</small></div>
                         </div>
 
                         ${this.renderNextEventsPanel()}

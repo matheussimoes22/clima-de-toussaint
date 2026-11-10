@@ -410,7 +410,13 @@ const WeatherEngine = {
       );
       const lift = signal(41);
       const seasonalWet =
-        signal(3) * 100 < clamp(season.precip + loc.rainOffset, 0, 100);
+        signal(3) * 100 <
+        clamp(
+          season.precip * (season === SEASONS.autumn ? 0.72 : 1) +
+            loc.rainOffset,
+          0,
+          100,
+        );
       moisture = clamp(
         moisture * 0.75 +
           availableHumidity * 0.25 -
@@ -429,8 +435,8 @@ const WeatherEngine = {
       wet =
         seasonalWet ||
         (availableHumidity >= 55 &&
-          moisture + recovery > 69 &&
-          lift > (convective ? 0.35 : 0.58));
+          moisture + recovery > (season === SEASONS.summer ? 69 : 76) &&
+          lift > (convective ? 0.35 : dryDays > 10 ? 0.58 : 0.72));
       dryDays = wet ? 0 : dryDays + 1;
       if (wet) moisture = Math.min(95, moisture + 9);
     }
@@ -514,11 +520,11 @@ const WeatherEngine = {
     // === CICLO SOLAR CANÔNICO DE TOUSSAINT ===
     // Recupera a curva original inspirada no jogo: perto do início do verão,
     // o sol nasce por volta das 05h e se põe após as 20h. No inverno, nasce
-    // mais tarde e se põe antes. A transição é contínua ao longo do ano.
+    // por volta das 06h e se põe às 19h30: sazonalidade suave e ficcional.
     const dayOfYear = this._getDayOfYear(date);
     const seasonFactor = -Math.cos((2 * Math.PI * (dayOfYear + 10)) / 365);
-    const sunriseMinutesBase = 6 * 60 - seasonFactor * 60;
-    const sunsetMinutesBase = 19 * 60 + seasonFactor * 90;
+    const sunriseMinutesBase = 5 * 60 + 30 - seasonFactor * 30;
+    const sunsetMinutesBase = 20 * 60 + seasonFactor * 30;
     const noise = Math.round(rand(99) * 10 - 5);
     const sunriseMinutes = Math.round(
       sunriseMinutesBase + noise + (locData.sunriseOffset || 0),
@@ -776,7 +782,8 @@ const WeatherEngine = {
     return buildHourlyWeather(
       dayWeather,
       LOCATIONS[locationKey],
-      (offset) => this._getSmoothNoise(seq, offset),
+      // Horários variam entre dias; o ruído suave continua na tendência diária.
+      (offset) => this._seededRandom(seq * 97 + offset),
       calcFeelsLike,
       previous,
     );
@@ -790,6 +797,13 @@ const WeatherEngine = {
       hourly.find((h) => parseInt(h.hour.split(":")[0]) === currentHour) ||
       hourly[0];
 
+    const minute = date.getHours() * 60 + date.getMinutes();
+    const night =
+      minute < dayWeather.sunriseMinutes || minute >= dayWeather.sunsetMinutes;
+    const conditionKey = currentHourData.conditionKey.replace(
+      /_(day|night)$/,
+      night ? "_night" : "_day",
+    );
     return {
       ...dayWeather,
       dailyWeather: dayWeather,
@@ -806,11 +820,9 @@ const WeatherEngine = {
       windDir: currentHourData.windDir,
       pressure: currentHourData.pressure,
       precipChance: currentHourData.precipChance,
-      conditionKey: currentHourData.conditionKey,
-      currentCondition: WEATHER_CONDITIONS[currentHourData.conditionKey],
-      uvIndex: currentHourData.conditionKey.includes("night")
-        ? 0
-        : dayWeather.uvIndex,
+      conditionKey,
+      currentCondition: WEATHER_CONDITIONS[conditionKey],
+      uvIndex: night ? 0 : dayWeather.uvIndex,
       hourlyMoonIcon: currentHourData.moonIcon,
     };
   },
