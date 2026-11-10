@@ -11,7 +11,10 @@ import {
   WeatherEngine,
   isBloodMoonVisible,
 } from "../assets/js/engine/weather-engine.js";
-import { setCurrentLanguage } from "../assets/js/i18n/translations.js";
+import {
+  setCurrentLanguage,
+  tCondName,
+} from "../assets/js/i18n/translations.js";
 import { LOCATIONS } from "../assets/js/data/world-data.js";
 import { TodayView } from "../assets/js/views/today-view.js";
 
@@ -142,6 +145,31 @@ assert.match(ctx.elements.modalTitle.textContent, /October/);
 assert.match(ctx.elements.modalBody.innerHTML, /Sunny/);
 assert.doesNotMatch(ctx.elements.modalBody.innerHTML, /Ensolarado|Previsão/);
 assert.equal(pushes, beforeRestore);
+
+// Reprodução da divergência entre o resumo diário e o tempo de agora.
+const now = new Date(2026, 10, 10, 13, 10);
+ctx.state.currentDate = now;
+const live = WeatherEngine.getCurrentWeather(now, ctx.state.currentLocation);
+assert.notEqual(live.conditionKey, live.dailyWeather.conditionKey);
+const condition = tCondName(live.conditionKey);
+ctx.renderDayModalContent(now);
+assert.ok(
+  ctx.elements.modalBody.innerHTML.includes(
+    `class="day-detail-condition">${condition}`,
+  ),
+);
+assert.ok(
+  ctx.elements.modalBody.innerHTML.includes(
+    `aria-current="time" aria-label="13:00: ${condition}, ${live.currentTemp}°`,
+  ),
+);
+assert.ok(
+  ctx
+    .renderCalendarPage(2026, 10, true)
+    .includes(`${condition}, Now ${live.currentTemp}°`),
+);
+ctx.renderDayModalContent(new Date(2026, 10, 11));
+assert.doesNotMatch(ctx.elements.modalBody.innerHTML, /aria-current="time"/);
 
 // Navegar durante um fechamento pendente não pode disparar history.back depois.
 let finishClose;

@@ -807,7 +807,11 @@ const WeatherEngine = {
     return {
       ...dayWeather,
       dailyWeather: dayWeather,
-      hourly,
+      hourly: hourly.map((hour, index) =>
+        index === currentHour
+          ? { ...hour, conditionKey, isNight: night }
+          : hour,
+      ),
       currentTemp: currentHourData.temp,
       precipitationOccurs: currentHourData.precipitationOccurs,
       precipAmountMm: currentHourData.precipAmountMm,

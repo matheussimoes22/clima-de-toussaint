@@ -9,14 +9,56 @@ import {
   tLocale,
   tMoonName,
 } from "../i18n/translations.js";
-import { resolveWxSvg, WeatherEngine } from "../engine/weather-engine.js";
+import {
+  isBloodMoonVisible,
+  resolveWxSvg,
+  WeatherEngine,
+} from "../engine/weather-engine.js";
 import { writeStoredValue } from "../state/preferences.js";
 import { bloodMoonIcon, uiIcon } from "./interface-icons.js";
 import { bindCalendarSwipe } from "../navigation/calendar-swipe.js";
 
+function calendarWeatherReading(weather, now) {
+  const isBloodMoon = Boolean(
+    now &&
+      isBloodMoonVisible(
+        weather.conditionKey,
+        now.getHours(),
+        weather.moon.isBloodMoon,
+      ),
+  );
+  const icon =
+    now && weather.conditionKey === "clear_night" && !isBloodMoon
+      ? weather.hourlyMoonIcon
+      : resolveWxSvg(weather.conditionKey, {
+          sizeClass: "calendar-weather-icon",
+          isBloodMoon,
+        });
+  const temperature = now
+    ? `${weather.currentTemp}°`
+    : `${weather.tempMax}° / ${weather.tempMin}°`;
+  const detail = now
+    ? `${t("Agora")} ${temperature}`
+    : `${t("Max")} ${weather.tempMax}°, ${t("Min")} ${weather.tempMin}°`;
+  return {
+    icon,
+    temperature,
+    precipitation: `${weather.precipChance}% ${uiIcon("drop")}`,
+    label: `${tCondName(weather.conditionKey)}, ${detail}, ${t("Chuva")} ${weather.precipChance}%`,
+  };
+}
+
 export const CalendarView = {
   /** Monta uma página mensal completa para que os meses vizinhos já existam no gesto. */
-  renderCalendarPage(calendarYear, calendarMonth, isCurrent = false) {
+  renderCalendarPage(
+    calendarYear,
+    calendarMonth,
+    isCurrent = false,
+    currentWeather = WeatherEngine.getCurrentWeather(
+      this.state.currentDate,
+      this.state.currentLocation,
+    ),
+  ) {
     const weekDaysHTML = this.state.isElven
       ? ""
       : `<div class="calendar-weekdays grid grid-cols-7 gap-px bg-slate-700 text-center text-xs font-bold text-gray-400 p-2"><div>${t("Dom")}</div><div>${t("Seg")}</div><div>${t("Ter")}</div><div>${t("Qua")}</div><div>${t("Qui")}</div><div>${t("Sex")}</div><div>${t("Sáb")}</div></div>`;
@@ -28,6 +70,9 @@ export const CalendarView = {
       this.state.isElven ? "elven" : "human",
       getCurrentLanguage(),
       this.state.currentDate.toDateString(),
+      currentWeather.conditionKey,
+      currentWeather.currentTemp,
+      currentWeather.precipChance,
     ].join(":");
     this._calendarPageCache ??= new Map();
     let cellsHtml = this._calendarPageCache.get(cacheKey);
@@ -46,12 +91,11 @@ export const CalendarView = {
         const isAdjacentMonth =
           date.getMonth() !== calendarMonth ||
           date.getFullYear() !== calendarYear;
-        const weather = WeatherEngine.getWeatherForDay(
-          date,
-          this.state.currentLocation,
-        );
         const isToday =
           date.toDateString() === this.state.currentDate.toDateString();
+        const weather = isToday
+          ? currentWeather
+          : WeatherEngine.getWeatherForDay(date, this.state.currentLocation);
         const isPast = date < this.state.currentDate && !isToday;
         let classes =
           "calendar-day p-2 h-24 md:h-32 bg-slate-800 hover:bg-slate-700 cursor-pointer transition-colors";
@@ -73,9 +117,10 @@ export const CalendarView = {
         const moonIconCal = weather.moon.isBloodMoon
           ? bloodMoonIcon("blood-moon-icon--calendar")
           : weather.moon.icon;
-        const dailyIcon = resolveWxSvg(weather.conditionKey, {
-          sizeClass: "calendar-weather-icon",
-        });
+        const reading = calendarWeatherReading(
+          weather,
+          isToday ? this.state.currentDate : null,
+        );
         let elvenDayInfo = "";
         let iconSizeClass = "text-lg md:text-2xl";
         let tempSizeClass =
@@ -102,16 +147,21 @@ export const CalendarView = {
           dayNumClass = "text-xs md:text-base font-bold";
         }
 
-        const dayAria = `${this.formatDate(date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}: ${tCondName(weather.conditionKey)}, ${t("Max")} ${weather.tempMax}°, ${t("Min")} ${weather.tempMin}°, ${t("Chuva")} ${weather.precipChance}%`;
+        const dateLabel = this.formatDate(date, {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
         const holidayMarker = weather.holiday
           ? `<span class="calendar-holiday" title="${tHoliday(weather.holiday, `${date.getMonth() + 1}-${date.getDate()}`).name}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.75l2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 16.95l-5.56 2.92 1.06-6.2L3 9.28l6.22-.9L12 2.75z"/></svg></span>`
           : "";
         cellsHtml += `
-        <button type="button" class="${classes}" data-date="${date.toISOString()}" aria-label="${dayAria}">
+        <button type="button" class="${classes}" data-date="${date.toISOString()}"${isToday ? ` data-date-label="${dateLabel}" aria-current="date"` : ""} aria-label="${dateLabel}: ${reading.label}">
           <span class="calendar-day-number ${dayNumClass}">${day}</span>
           ${holidayMarker}
           <span class="calendar-day-badges"><span class="calendar-moon ${moonClass}" title="${moonName}">${moonIconCal}</span></span>
-          <div class="calendar-day-content ${containerClass}"><span class="${iconSizeClass}">${dailyIcon}</span>${elvenDayInfo}<p class="${tempSizeClass}">${weather.tempMax}° / ${weather.tempMin}°</p><p class="${precipSizeClass}">${weather.precipChance}% ${uiIcon("drop")}</p></div>
+          <div class="calendar-day-content ${containerClass}"><span class="${iconSizeClass}">${reading.icon}</span>${elvenDayInfo}<p class="${tempSizeClass}">${reading.temperature}</p><p class="${precipSizeClass}">${reading.precipitation}</p></div>
         </button>`;
       }
       this._calendarPageCache.set(cacheKey, cellsHtml);
@@ -124,6 +174,25 @@ export const CalendarView = {
     return `<section class="calendar-page${isCurrent ? " is-current" : ""}"${isCurrent ? "" : ' aria-hidden="true" inert'}>${weekDaysHTML}<div${gridId} class="calendar-grid grid grid-cols-7 gap-px bg-slate-700">${cellsHtml}</div></section>`;
   },
 
+  refreshCalendarToday(weather) {
+    const reading = calendarWeatherReading(weather, this.state.currentDate);
+    this.elements.main
+      .querySelectorAll(".calendar-day.today")
+      .forEach((cell) => {
+        cell.querySelector(".calendar-day-content > span").innerHTML =
+          reading.icon;
+        const [temperature, precipitation] = cell.querySelectorAll(
+          ".calendar-day-content > p",
+        );
+        temperature.textContent = reading.temperature;
+        precipitation.innerHTML = reading.precipitation;
+        cell.setAttribute(
+          "aria-label",
+          `${cell.dataset.dateLabel}: ${reading.label}`,
+        );
+      });
+  },
+
   renderCalendar() {
     this._calendarSwipe?.destroy();
     const self = this;
@@ -131,6 +200,10 @@ export const CalendarView = {
     const monthDate = new Date(calendarYear, calendarMonth, 1);
     const prevDate = new Date(calendarYear, calendarMonth - 1, 1);
     const nextDate = new Date(calendarYear, calendarMonth + 1, 1);
+    const currentWeather = WeatherEngine.getCurrentWeather(
+      this.state.currentDate,
+      this.state.currentLocation,
+    );
     const displayMonth = monthDate.toLocaleString(tLocale(), { month: "long" });
     const displayYear = this.state.isElven
       ? `(${getCurrentLanguage() === "en" ? "Year" : "Ano"} ${this.getElvenData(monthDate).year})`
@@ -154,9 +227,9 @@ export const CalendarView = {
         </div>
         <div id="calendar-swipe-viewport" class="calendar-swipe-viewport">
           <div id="calendar-track" class="calendar-track">
-            ${this.renderCalendarPage(prevDate.getFullYear(), prevDate.getMonth())}
-            ${this.renderCalendarPage(calendarYear, calendarMonth, true)}
-            ${this.renderCalendarPage(nextDate.getFullYear(), nextDate.getMonth())}
+            ${this.renderCalendarPage(prevDate.getFullYear(), prevDate.getMonth(), false, currentWeather)}
+            ${this.renderCalendarPage(calendarYear, calendarMonth, true, currentWeather)}
+            ${this.renderCalendarPage(nextDate.getFullYear(), nextDate.getMonth(), false, currentWeather)}
           </div>
         </div>
       </div>`;

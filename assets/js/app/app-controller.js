@@ -242,12 +242,21 @@ export const App = {
         self.refreshAllLocationRecords(self.state.currentDate);
         if (self.state.currentView === "monthly") self.renderMonthly();
         if (self.state.currentView === "today") self.renderToday();
-        self.applyWeatherFx(
-          WeatherEngine.getCurrentWeather(
-            self.state.currentDate,
-            self.state.currentLocation,
-          ),
+        const weather = WeatherEngine.getCurrentWeather(
+          self.state.currentDate,
+          self.state.currentLocation,
         );
+        const dayChanged = self.dateKey(self.state.currentDate) !== previousDay;
+        if (
+          dayChanged ||
+          self.state.currentDate.getHours() !== previousHour ||
+          weather.conditionKey !== self._skyWeather?.conditionKey
+        ) {
+          if (!dayChanged && self.state.currentView === "calendar")
+            self.refreshCalendarToday(weather);
+          self.refreshOpenDayModal(weather, previousDay);
+        }
+        self.applyWeatherFx(weather);
       }
       if (self.dateKey(self.state.currentDate) !== previousDay) {
         const recordsChanged = self.refreshAllLocationRecords(
@@ -459,6 +468,7 @@ export const App = {
     this.setSettingsOpen(false);
     this.elements.modal.classList.toggle("day-detail-modal", variant === "day");
     this._dayModalSource = variant === "day" ? sourceElement : null;
+    this._dayModalDate = detail?.kind === "day" ? detail.date : null;
     this.setModalOpen(true);
     if (variant === "day" && sourceElement) {
       // Instala a transformação antes da próxima pintura para não exibir
@@ -877,17 +887,47 @@ export const App = {
   },
 
   openDayModal(date, sourceElement = null) {
-    const self = this;
-    const weather = WeatherEngine.getWeatherForDay(
-      date,
-      this.state.currentLocation,
-    );
-    const hourly = WeatherEngine.getHourlyForecast(
-      weather,
-      this.state.currentLocation,
-    );
+    this.renderDayModalContent(date);
+    this.openModal({
+      variant: "day",
+      sourceElement,
+      detail: { kind: "day", date: this.dateKey(date) },
+    });
+    this.elements.modalBody.scrollTop = 0;
+  },
+
+  refreshOpenDayModal(currentWeather, previousDay) {
+    if (
+      !this._dayModalDate ||
+      this._modalClosing ||
+      ![previousDay, this.dateKey(this.state.currentDate)].includes(
+        this._dayModalDate,
+      )
+    )
+      return;
+    const date = localDateFromKey(this._dayModalDate);
+    const { modalContent, modalBody } = this.elements;
+    const scrollTop = modalContent.scrollTop;
+    const scrollLeft =
+      modalBody.querySelector(".day-hourly-strip")?.scrollLeft ?? 0;
+    this.renderDayModalContent(date, currentWeather);
+    modalContent.scrollTop = scrollTop;
+    modalBody.querySelector(".day-hourly-strip").scrollLeft = scrollLeft;
+  },
+
+  renderDayModalContent(date, currentWeather) {
     const isToday =
       date.toDateString() === this.state.currentDate.toDateString();
+    const weather = isToday
+      ? (currentWeather ??
+        WeatherEngine.getCurrentWeather(
+          this.state.currentDate,
+          this.state.currentLocation,
+        ))
+      : WeatherEngine.getWeatherForDay(date, this.state.currentLocation);
+    const hourly = isToday
+      ? weather.hourly
+      : WeatherEngine.getHourlyForecast(weather, this.state.currentLocation);
     const currentHour = isToday ? this.state.currentDate.getHours() : -1;
     this.elements.modalTitle.textContent = this.formatDate(date, {
       weekday: "long",
@@ -930,7 +970,7 @@ export const App = {
           : "flex-shrink-0 w-20 text-center bg-slate-700 p-3 rounded-lg"
       }${showBloodMoon ? " blood-moon-forecast-hour" : ""}`;
       const textClasses = isCurrentHour ? "text-amber-300" : "text-gray-400";
-      hourlyHtml += `<div class="${cardClasses}" aria-label="${h.hour}: ${tCondName(h.conditionKey)}, ${h.temp}°, ${Math.round(h.humidity)}% ${t("Umidade")}"><p class="text-sm ${textClasses}">${h.hour}</p><p class="text-2xl my-1" aria-hidden="true">${displayIcon}</p><p class="text-lg font-bold">${h.temp}°</p><p class="text-xs ${textClasses}">${t("Umid.")} ${Math.round(h.humidity)}%</p></div>`;
+      hourlyHtml += `<div class="${cardClasses}"${isCurrentHour ? ' aria-current="time"' : ""} aria-label="${h.hour}: ${tCondName(h.conditionKey)}, ${h.temp}°, ${Math.round(h.humidity)}% ${t("Umidade")}"><p class="text-sm ${textClasses}">${h.hour}</p><p class="text-2xl my-1" aria-hidden="true">${displayIcon}</p><p class="text-lg font-bold">${h.temp}°</p><p class="text-xs ${textClasses}">${t("Umid.")} ${Math.round(h.humidity)}%</p></div>`;
     });
     hourlyHtml += "</div>";
     let holidayHtml = "";
@@ -954,25 +994,38 @@ export const App = {
                     <p class="text-xl md:text-2xl font-bold ${moonClass}">${displayMoonPhase} (${weather.moon.illumination}%)</p>
                 </div>`;
 
-    const overviewIcon = resolveWxSvg(weather.conditionKey, {
-      sizeClass: "day-detail-weather-icon",
-    });
-    const overviewHtml = `<section class="day-detail-hero" aria-label="${tCondName(weather.conditionKey)}, ${t("Max")} ${weather.tempMax}°, ${t("Min")} ${weather.tempMin}°">
+    const overviewIcon =
+      isToday &&
+      weather.conditionKey === "clear_night" &&
+      !isBloodMoonVisible(
+        weather.conditionKey,
+        currentHour,
+        weather.moon.isBloodMoon,
+      )
+        ? weather.hourlyMoonIcon
+        : resolveWxSvg(weather.conditionKey, {
+            sizeClass: "day-detail-weather-icon",
+            isBloodMoon:
+              isToday &&
+              isBloodMoonVisible(
+                weather.conditionKey,
+                currentHour,
+                weather.moon.isBloodMoon,
+              ),
+          });
+    const temperatures = isToday
+      ? `${t("Agora")} ${weather.currentTemp}°`
+      : `${t("Max")} ${weather.tempMax}°, ${t("Min")} ${weather.tempMin}°`;
+    const overviewHtml = `<section class="day-detail-hero" aria-label="${tCondName(weather.conditionKey)}, ${temperatures}">
       <span class="day-detail-hero-icon" aria-hidden="true">${overviewIcon}</span>
       <div class="day-detail-hero-copy">
         <p class="day-detail-location">${tLocationName(this.state.currentLocation)}</p>
         <p class="day-detail-condition">${tCondName(weather.conditionKey)}</p>
-        <p class="day-detail-temperature"><strong>${weather.tempMax}°</strong><span>${weather.tempMin}°</span></p>
+        <p class="day-detail-temperature">${isToday ? `<strong>${weather.currentTemp}°</strong><span>${t("Agora")}</span>` : `<strong>${weather.tempMax}°</strong><span>${weather.tempMin}°</span>`}</p>
       </div>
       <span class="day-detail-rain">${uiIcon("drop")} ${weather.precipChance}%</span>
     </section>`;
     this.elements.modalBody.innerHTML = `${overviewHtml}<h4 class="day-detail-section-title font-cinzel text-lg text-amber-400 mt-6 mb-4">${t("Previsão horária")}</h4>${hourlyHtml}${detailsHtml}${holidayHtml}`;
-    this.openModal({
-      variant: "day",
-      sourceElement,
-      detail: { kind: "day", date: this.dateKey(date) },
-    });
-    this.elements.modalBody.scrollTop = 0;
   },
 
   openSeasonModal(currentSeasonKey) {
@@ -1000,6 +1053,7 @@ export const App = {
   /** Alterna o diálogo visualmente; o histórico é controlado pelos métodos públicos. */
   setModalOpen(isOpen, { restoreFocus = true } = {}) {
     if (!isOpen) {
+      this._dayModalDate = null;
       this._modalCloseToken = null;
       this._modalClosing = false;
       this.cancelModalOpeningAnimations();

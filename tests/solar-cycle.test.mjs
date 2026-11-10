@@ -15,6 +15,8 @@ for (const loc of Object.keys(LOCATIONS))
       const time = new Date(2026, month, 6, 0, minute);
       const w = W.getCurrentWeather(time, loc);
       assert.equal(w.conditionKey.endsWith("_night"), night, loc + " " + time);
+      assert.equal(w.hourly[time.getHours()].conditionKey, w.conditionKey);
+      assert.equal(w.hourly[time.getHours()].isNight, night);
       if (night) assert.equal(w.uvIndex, 0);
     }
   }
